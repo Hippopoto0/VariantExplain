@@ -1,0 +1,19 @@
+[project]
+name = "variantexplain"
+version = "0.1.0"
+description = "Explaining the meaning of variances in Genome Sequences using RAG."
+authors = [
+    {name = "Hippopoto0",email = "67485469+Hippopoto0@users.noreply.github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "streamlit (>=1.45.1,<2.0.0)",
+    "vcfpy (>=0.13.8,<0.14.0)"
+]
+package-mode = false
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
