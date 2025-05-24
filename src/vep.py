@@ -20,6 +20,7 @@ VEP_PARAMS = {
     "conservation": 1, # Add conservation scores (e.g., PhyloP, phastCons)
     "canonical": 1,    # Only return consequences for canonical transcripts
     "gene_phenotype": 1, # Add gene-phenotype associations (e.g., OMIM, Orphanet)
+    "dbSNP": 1,        # get the rsID
     # "AlphaMissense": 1, # AlphaMissense plugin (requires additional data installation for command-line)
     # "CADD": 1, # CADD plugin (requires additional data installation for command-line)
 }

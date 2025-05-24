@@ -61,5 +61,7 @@ class VCFParser:
         return r['vcf']
 
 if __name__ == '__main__':
-    parser = VCFParser('src/test.vcf')
+    # parser = VCFParser('src/test.vcf')
+    parser = VCFParser('data/truncated.vcf')
+
     print(parser.vcf_file)
