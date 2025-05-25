@@ -53,26 +53,251 @@ class RAG:
         # we want traits, might be rendered dynamically, in which case I need to find the link
         # yup, rendered dynamically, but this seems to give json to traits: https://www.ebi.ac.uk/gwas/api/v2/genes/UBE4B/traits?size=5&page=0
 
-        traits = []
-        print(GWAS_data)
         for gene_and_title in GWAS_data:
             if len(gene_and_title) == 0:
                 continue
             gene = gene_and_title[0]['title']
             response = requests.get(f"https://www.ebi.ac.uk/gwas/api/v2/genes/{gene}/associations?size=30&page=0")
-            response_json_raw = response.text
-            # print(response_json_raw)
-
-            pattern = r'"label"\s*:\s*"([^"]*)"'
-            labels = re.findall(pattern, response_json_raw)
-
-            # if "rheumatoid arthritis" in labels:
-            #     print(gene + " has rheumatoid arthritis")
-            print(f"gene: {gene}, {labels=}")
-            traits += labels     
+            response_json = response.json()
             
-        # print(traits)
-        return traits
+            # example allele data below
+# gwas_json_data = {
+#   "_embedded" : {
+#     "associations" : [ {
+#       "riskAllele" : [ {
+#         "key" : "rs7518602",
+#         "label" : "rs7518602-C"
+#       } ],
+#       "riskFrequency" : "0.391285",
+#       "pValueExponent" : -27,
+#       "pValue" : 2,
+#       "beta" : "0.022113 SD unit decrease",
+#       "ci" : "[0.018-0.026]",
+#       "mappedGenes" : [ "PIK3CD" ],
+#       "traitName" : [ "Eosinophil counts" ],
+#       "efoTraits" : [ {
+#         "key" : "EFO_0004842",
+#         "label" : "eosinophil count"
+#       } ],
+#       "locations" : [ "1:9651286" ],
+#       "author" : "Chen MH",
+#       "publicationDate" : "2020-09-01",
+#       "accessionId" : "GCST90002298",
+#       "riskAlleleSep" : " x ",
+#       "pubmedId" : "32888493",
+#       "_links" : {
+#         "self" : {
+#           "href" : "https://www.ebi.ac.uk/gwas/api/v2/publications"
+#         }
+#       }
+#     }, {
+#       "riskAllele" : [ {
+#         "key" : "rs11806839",
+#         "label" : "rs11806839-C"
+#       } ],
+#       "riskFrequency" : "0.384008",
+#       "pValueExponent" : -27,
+#       "pValue" : 3,
+#       "beta" : "0.024747888 unit decrease",
+#       "ci" : "[0.02-0.029]",
+#       "mappedGenes" : [ "PIK3CD" ],
+#       "traitName" : [ "Eosinophil counts" ],
+#       "efoTraits" : [ {
+#         "key" : "EFO_0004842",
+#         "label" : "eosinophil count"
+#       } ],
+#       "locations" : [ "1:9651702" ],
+#       "author" : "Vuckovic D",
+#       "publicationDate" : "2020-09-01",
+#       "accessionId" : "GCST90002381",
+#       "riskAlleleSep" : " x ",
+#       "pubmedId" : "32888494",
+#       "_links" : {
+#         "self" : {
+#           "href" : "https://www.ebi.ac.uk/gwas/api/v2/publications"
+#         }
+#       }
+#     }, {
+#       "riskAllele" : [ {
+#         "key" : "rs11806839",
+#         "label" : "rs11806839-C"
+#       } ],
+#       "riskFrequency" : "0.384037",
+#       "pValueExponent" : -19,
+#       "pValue" : 2,
+#       "beta" : "0.020676868 unit decrease",
+#       "ci" : "[0.016-0.025]",
+#       "mappedGenes" : [ "PIK3CD" ],
+#       "traitName" : [ "Eosinophil percentage of white cells" ],
+#       "efoTraits" : [ {
+#         "key" "EFO_0007991",
+#         "label" : "eosinophil percentage of leukocytes"
+#       } ],
+#       "locations" : [ "1:9651702" ],
+#       "author" : "Vuckovic D",
+#       "publicationDate" : "2020-09-01",
+#       "accessionId" : "GCST90002382",
+#       "riskAlleleSep" : " x ",
+#       "pubmedId" : "32888494",
+#       "_links" : {
+#         "self" : {
+#           "href" : "https://www.ebi.ac.uk/gwas/api/v2/publications"
+#         }
+#       }
+#     }, {
+#       "riskAllele" : [ {
+#         "key" : "rs7518602",
+#         "label" : "rs7518602-C"
+#       } ],
+#       "riskFrequency" : "0.481322",
+#       "pValueExponent" : -27,
+#       "pValue" : 8,
+#       "mappedGenes" : [ "PIK3CD" ],
+#       "traitName" : [ "Eosinophil counts" ],
+#       "efoTraits" : [ {
+#         "key" : "EFO_0004842",
+#         "label" : "eosinophil count"
+#       } ],
+#       "locations" : [ "1:9651286" ],
+#       "author" : "Chen MH",
+#       "publicationDate" : "2020-09-01",
+#       "accessionId" : "GCST90002302",
+#       "riskAlleleSep" : " x ",
+#       "pubmedId" : "32888493",
+#       "_links" : {
+#         "self" : {
+#           "href" : "https://www.ebi.ac.uk/gwas/api/v2/publications"
+#         }
+#       }
+#     }, {
+#       "riskAllele" : [ {
+#         "key" : "rs7516138",
+#         "label" : "rs7516138-G"
+#       } ],
+#       "riskFrequency" : "0.391091",
+#       "pValueExponent" : -31,
+#       "pValue" : 1,
+#       "beta" : "0.022592 SD unit decrease",
+#       "ci" : "[0.019-0.026]",
+#       "mappedGenes" : [ "PIK3CD" ],
+#       "traitName" : [ "Monocyte count" ],
+#       "efoTraits" : [ {
+#         "key" : "EFO_0005091",
+#         "label" : "monocyte count"
+#       } ],
+#       "locations" : "1:9651584" ], # Note: This was incorrectly a list of strings in the original JSON, now it's a single string for 'locations'
+#       "author" : "Chen MH",
+#       "publicationDate" : "2020-09-01",
+#       "accessionId" : "GCST90002340",
+#       "riskAlleleSep" : " x ",
+#       "pubmedId" : "32888493",
+#       "_links" : {
+#         "self" : {
+#           "href" : "https://www.ebi.ac.uk/gwas/api/v2/publications"
+#         }
+#       }
+#     } ]
+#   },
+#   "_links" : {
+#     "first" : {
+#       "href" : "https://www.ebi.ac.uk/gwas/api/v2/variants?page=0&size=5"
+#     },
+#     "self" : {
+#       "href" : "https://www.ebi.ac.uk/gwas/api/v2/variants"
+#     },
+#     "next" : {
+#       "href" : "https://www.ebi.ac.uk/gwas/api/v2/variants?page=1&size=5"
+#     },
+#     "last" : {
+#       "href" : "https://www.ebi.ac.uk/gwas/api/v2/variants?page=6&size=5"
+#     }
+#   },
+#   "page" : {
+#     "size" : 5,
+#     "totalElements" : 33,
+#     "totalPages" : 7,
+#     "number" : 0
+#   }
+# }
+            extracted_associations = []
+
+            # Navigate to the list of associations
+            associations = response_json.get("_embedded", {}).get("associations", [])
+
+            for assoc in associations:
+                # Extract traitName (it's a list, so join if multiple or take first)
+                trait_name = assoc.get("traitName", [])
+                if trait_name:
+                    trait_name = trait_name[0] # Take the first trait name if multiple
+                else:
+                    trait_name = "N/A"
+
+                # Extract beta (if present)
+                beta = assoc.get("beta")
+
+                # Extract PubMed ID
+                pubmed_id = assoc.get("pubmedId")
+
+                # Extract riskAllele (it's a list of dicts, get 'label' or 'key')
+                risk_allele_info = assoc.get("riskAllele", [])
+                risk_allele = None
+                if risk_allele_info and len(risk_allele_info) > 0:
+                    risk_allele = risk_allele_info[0].get("label") # or .get("key") for just rsID
+                    if not risk_allele: # Fallback to key if label isn't there
+                        risk_allele = risk_allele_info[0].get("key")
+                if not risk_allele:
+                    risk_allele = "N/A"
+
+                # Calculate full pValue from pValue and pValueExponent
+                p_value_exponent = assoc.get("pValueExponent")
+                p_value_base = assoc.get("pValue")
+                
+                calculated_p_value = None
+                if p_value_exponent is not None and p_value_base is not None:
+                    calculated_p_value = f"{p_value_base}e{p_value_exponent}" # Formatted as string like "2e-27"
+                    # If you need it as a float: calculated_p_value = float(f"{p_value_base}e{p_value_exponent}")
+                else:
+                    calculated_p_value = "N/A"
+                    
+                # Odds Ratio (OR) - checking if it exists, otherwise it will be None
+                # GWAS Catalog uses 'orValue' (lowercase) field for odds ratio
+                odds_ratio = assoc.get("orValue") 
+                if odds_ratio is None: # If 'orValue' field doesn't exist, check for 'oddsRatio' (less common)
+                    odds_ratio = assoc.get("oddsRatio")
+                if odds_ratio is None:
+                    odds_ratio = "N/A" # Set to N/A if neither is found
+                    
+                if odds_ratio != "N/A":
+                    extracted_associations.append({
+                        "traitName": trait_name,
+                        "beta": beta if beta is not None else "N/A",
+                        "pubmedId": pubmed_id if pubmed_id is not None else "N/A",
+                        "riskAllele": risk_allele,
+                        "pValue": calculated_p_value,
+                        "OR": odds_ratio
+                    })
+            
+        print(extracted_associations)
+        return extracted_associations
+
+    def append_pubmed_abstracts(self, associated_traits):
+        for trait in associated_traits:
+            pmid = trait.get("pubmedId")
+            if pmid:
+                abstract = self.fetch_abstract_from_pubmed_id(pmid)
+                trait["abstract"] = abstract
+
+        return associated_traits
+
+    def fetch_abstract_from_pubmed_id(self, pubmed_id):
+
+        response = requests.get(f"https://pubmed.ncbi.nlm.nih.gov/{pubmed_id}")
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            abstract = soup.find('div', {'class': 'abstract-content'}).get_text(strip=True)
+            return abstract
+        else:
+            return None
     # def search_annotations(self, annotations_raw: str):
     #     vep_data = json.loads(annotations_raw)
     #     retrieved_articles_by_variant = {}
@@ -662,5 +887,9 @@ with open("src/annotation.json", "r") as f:
 if __name__ == '__main__':
     
     rag = RAG()
-    rag.search_annotations(annotations_raw)
+    associated_traits = rag.search_annotations(annotations_raw)
+    print("Finding relevant articles...")
+    associated_and_abstracts = rag.append_pubmed_abstracts(associated_traits)
+    print("Found articles:")
+    print(associated_and_abstracts)
 
