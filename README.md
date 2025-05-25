@@ -2,7 +2,7 @@
 
 A web application that helps users understand the meaning and implications of genetic variants in their genome sequences using RAG (Retrieval-Augmented Generation) technology.
 
-![Example Output](docs/example_output.png)
+![Example Output](images/example_output.png)
 
 
 
