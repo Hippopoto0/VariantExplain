@@ -56,6 +56,14 @@ if st.button("Run Variant Explain"):
 
 # Add a footer
 st.markdown("---")
+
+# Abstracts section
+if 'abstracts' in locals() and abstracts:
+    st.header("Abstracts")
+    for item in abstracts:
+        with st.expander(f"{item['traitName']}"):
+            st.write(item)
+
 footer = """
 Created with Streamlit 🎈
 """
