@@ -7,15 +7,16 @@ import tempfile
 import json
 
 # Set page title
-st.title("Variant Explain App")
+# st.title("Variant Explain App")
 
-# st.set_page_config(
-#     page_title="Variant Explain",
-#     page_icon=":robot:"
-# )
+st.set_page_config(
+    page_title="Variant Explain",
+    page_icon=":dna:"
+)
 
 # Add description
 st.markdown("""
+# VariantExplain
 Welcome to the Variant Explain App! This application helps you analyze and understand genetic variants.
 """)
 
@@ -30,9 +31,9 @@ Welcome to the Variant Explain App! This application helps you analyze and under
 variant_input: UploadedFile = st.file_uploader("Upload a VCF file", type="vcf")
 
 st.write("### Variant Analysis")
-if variant_input:
-    st.write(f"You uploaded: {variant_input}")
-    st.write("This is where the analysis results will appear.")
+# if variant_input:
+#     st.write(f"You uploaded: {variant_input}")
+#     st.write("This is where the analysis results will appear.")
 
 state_title = "Generating output"
 if st.button("Run Variant Explain"):
@@ -64,7 +65,3 @@ if 'abstracts' in locals() and abstracts:
         with st.expander(f"{item['traitName']}"):
             st.write(item)
 
-footer = """
-Created with Streamlit 🎈
-"""
-st.markdown(footer)
