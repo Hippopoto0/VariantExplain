@@ -5,6 +5,7 @@ from parse import VCFParser
 from rag import RAG
 import tempfile
 import json
+import re
 from agent import Agent
 
 # Set page title
@@ -64,9 +65,45 @@ if 'abstracts' in locals() and abstracts:
     st.header("Your info")
     agent = Agent()
     trait_info_with_images = agent.summarise_traits(abstracts)
+    
     for item in trait_info_with_images:
-        with st.expander(f"{item['trait_title']} with {item['increase_decrease']}"):
-            st.write(item['details'])
+        # Extract percentage and determine color
+        try:
+            # Use regex to extract number from text like "18% increase" or "18% decrease"
+            match = re.search(r'([\d.]+)%', item['increase_decrease'])
+            if match:
+                percentage = float(match.group(1))
+                # Determine color based on whether it's an increase or decrease
+                if item['good_or_bad'] == "Good":
+                    color = "green"
+                else:
+                    color = "red"
+            else:
+                percentage = 0
+                color = "yellow"
+        except (ValueError, TypeError, AttributeError):
+            percentage = 0
+            color = "yellow"
+        
+        # Create columns for layout
+        col1, col2 = st.columns([1, 3])
+        
+        with col1:
+            # Display image if available
             if item['image_url']:
-                st.image(item['image_url'])
+                st.image(item['image_url'], width=100)
+        
+        with col2:
+            # Create columns for title and percentage
+            title_col, perc_col = st.columns([2, 1])
+            
+            with title_col:
+                # Create expander with title
+                with st.expander(f"#### {item['trait_title']}", expanded=False):
+                    # Display details
+                    st.write(item['details'] if item['details'] else "No additional details available")
+            
+            with perc_col:
+                # Display percentage with color
+                st.markdown(f"<p style='color: {color}; font-size: 18px;'>{percentage:+.1f}%</p>", unsafe_allow_html=True)
 

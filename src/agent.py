@@ -27,12 +27,13 @@ class Agent:
             Trait title:
             Increase/decrease of chance as percentage
             Details of the GWAS trait
+            Whether having the trait is a good or bad thing
 
             Data should be given as JSON:
             [
-            {'{"trait_title": "Trait title", "increase_decrease": "Increase/decrease of chance as percentage", "details": "Details of the GWAS trait"}'},
-            {'{"trait_title": "Trait title", "increase_decrease": "Increase/decrease of chance as percentage", "details": "Details of the GWAS trait"}'},
-            {'{"trait_title": "Trait title", "increase_decrease": "Increase/decrease of chance as percentage", "details": "Details of the GWAS trait"}'},
+            {'{"trait_title": "Trait title", "increase_decrease": "Increase/decrease of chance as percentage", "details": "Details of the GWAS trait", "good_or_bad": "Good or bad"}'},
+            {'{"trait_title": "Trait title", "increase_decrease": "Increase/decrease of chance as percentage", "details": "Details of the GWAS trait", "good_or_bad": "Good or bad"}'},
+            {'{"trait_title": "Trait title", "increase_decrease": "Increase/decrease of chance as percentage", "details": "Details of the GWAS trait", "good_or_bad": "Good or bad"}'},
             ]
             
 
@@ -66,6 +67,7 @@ class Agent:
                 "trait_title": trait['trait_title'],
                 "increase_decrease": trait['increase_decrease'],
                 "details": trait['details'],
+                "good_or_bad": trait['good_or_bad'],
                 "image_url": image_result['image_url'] if image_result else None
             })
 
