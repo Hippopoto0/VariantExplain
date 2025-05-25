@@ -15,6 +15,14 @@ A web application that helps users understand the meaning and implications of ge
 - Color-coded percentage indicators showing trait likelihood changes
 - Interactive Streamlit interface for easy exploration
 
+## Next Steps
+
+- [x] Summarise content of GWAS traits, and provide summary to users
+- [ ] Only suitable for small VCF files, in the future could be scaled (I don't have the funds to query all that though...)
+- [ ] Complete embeddings of abstracts when working with larger VCF files, then generate query from variant data
+- [ ] Rewrite more custom interface using React, interop using FastAPI
+- [ ] Add RAG-based chat to allow further querying of GWAS traits
+
 ## Installation
 
 1. Clone the repository:
