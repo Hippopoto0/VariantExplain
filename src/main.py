@@ -5,6 +5,7 @@ from parse import VCFParser
 from rag import RAG
 import tempfile
 import json
+from agent import Agent
 
 # Set page title
 # st.title("Variant Explain App")
@@ -60,8 +61,12 @@ st.markdown("---")
 
 # Abstracts section
 if 'abstracts' in locals() and abstracts:
-    st.header("Abstracts")
-    for item in abstracts:
-        with st.expander(f"{item['traitName']}"):
-            st.write(item)
+    st.header("Your info")
+    agent = Agent()
+    trait_info_with_images = agent.summarise_traits(abstracts)
+    for item in trait_info_with_images:
+        with st.expander(f"{item['trait_title']} with {item['increase_decrease']}"):
+            st.write(item['details'])
+            if item['image_url']:
+                st.image(item['image_url'])
 

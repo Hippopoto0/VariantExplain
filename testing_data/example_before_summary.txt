@@ -1,0 +1,59 @@
+Allergic rhinitis
+
+
+
+{"traitName":"Allergic rhinitis"
+
+"beta":"N/A"
+
+"pubmedId":"22036096"
+
+"riskAllele":"rs6586513-C"
+
+"pValue":"4e-6"
+
+"OR":"1.24"
+
+"abstract":"Background:Hay fever or seasonal allergic rhinitis (AR) is a chronic disorder associated with IgE sensitization to grass. The underlying genetic variants have not been studied comprehensively. There is overwhelming evidence that those who have older siblings have less AR, although the mechanism for this remains unclear.Objective:We sought to identify common genetic variant associations with prevalent AR and grass sensitization using existing genome-wide association study (GWAS) data and to determine whether genetic variants modify the protective effect of older siblings.Method:Approximately 2.2 million genotyped or imputed single nucleotide polymorphisms were investigated in 4 large European adult cohorts for AR (3,933 self-reported cases vs 8,965 control subjects) and grass sensitization (2,315 cases vs 10,032 control subjects).Results:Three loci reached genome-wide significance for either phenotype. The HLA variant rs7775228, which cis-regulates HLA-DRB4, was strongly associated with grass sensitization and weakly with AR (P(grass) = 1.6 × 10(-9); P(AR) = 8.0 × 10(-3)). Variants in a locus near chromosome 11 open reading frame 30 (C11orf30) and leucine-rich repeat containing 32 (LRRC32), which was previously associated with atopic dermatitis and eczema, were also strongly associated with both phenotypes (rs2155219; P(grass) = 9.4 × 10(-9); P(AR) = 3.8 × 10(-8)). The third genome-wide significant variant was rs17513503 (P(grass) = 1.2 × 10(-8); PAR = 7.4 × 10(-7)) which was located near transmembrane protein 232 (TMEM232) and solute carrier family 25, member 46 (SLC25A46). Twelve further loci with suggestive associations were also identified. Using a candidate gene approach, where we considered variants within 164 genes previously thought to be important, we found variants in 3 further genes that may be of interest: thymic stromal lymphopoietin (TSLP), Toll-like receptor 6 (TLR6) and nucleotide-binding oligomerization domain containing 1 (NOD1/CARD4). We found no evidence for variants that modified the effect of birth order on either phenotype.Conclusions:This relatively large meta-analysis of GWASs identified few loci associated with AR and grass sensitization. No birth order interaction was identified in the current analyses."
+
+}
+
+Gout
+
+
+
+{"traitName":"Gout"
+
+"beta":"N/A"
+
+"pubmedId":"39406924"
+
+"riskAllele":"rs565410312-T"
+
+"pValue":"5e-8"
+
+"OR":"0.9626167"
+
+"abstract":"Gout is a chronic disease that is caused by an innate immune response to deposited monosodium urate crystals in the setting of hyperuricemia. Here, we provide insights into the molecular mechanism of the poorly understood inflammatory component of gout from a genome-wide association study (GWAS) of 2.6 million people, including 120,295 people with prevalent gout. We detected 377 loci and 410 genetically independent signals (149 previously unreported loci in urate and gout). An additional 65 loci with signals in urate (from a GWAS of 630,117 individuals) but not gout were identified. A prioritization scheme identified candidate genes in the inflammatory process of gout, including genes involved in epigenetic remodeling, cell osmolarity and regulation of NOD-like receptor protein 3 (NLRP3) inflammasome activity. Mendelian randomization analysis provided evidence for a causal role of clonal hematopoiesis of indeterminate potential in gout. Our study identifies candidate genes and molecular processes in the inflammatory pathogenesis of gout suitable for follow-up studies."
+
+}
+
+Leprosy
+
+
+
+{"traitName":"Leprosy"
+
+"beta":"N/A"
+
+"pubmedId":"36121873"
+
+"riskAllele":"rs201434151-CT"
+
+"pValue":"1e-5"
+
+"OR":"2.0"
+
+"abstract":"Leprosy is a chronic infection of the skin and peripheral nerves caused by Mycobacterium leprae. Despite recent improvements in disease control, leprosy remains an important cause of infectious disability globally. Large-scale genetic association studies in Chinese, Vietnamese and Indian populations have identified over 30 susceptibility loci for leprosy. There is a significant burden of leprosy in Africa, however it is uncertain whether the findings of published genetic association studies are generalizable to African populations. To address this, we conducted a genome-wide association study (GWAS) of leprosy in Malawian (327 cases, 436 controls) and Malian (247 cases, 368 controls) individuals. In that analysis, we replicated four risk loci previously reported in China, Vietnam and India; MHC Class I and II, LACC1 and SLC29A3. We further identified a novel leprosy susceptibility locus at 10q24 (rs2015583; combined p = 8.81 × 10-9; OR = 0.51 [95% CI 0.40 - 0.64]). Using publicly-available data we characterise regulatory activity at this locus, identifying ACTR1A as a candidate mediator of leprosy risk. This locus shows evidence of recent positive selection and demonstrates pleiotropy with established risk loci for inflammatory bowel disease and childhood-onset asthma. A shared genetic architecture for leprosy and inflammatory bowel disease has been previously described. We expand on this, strengthening the hypothesis that selection pressure driven by leprosy has shaped the evolution of autoimmune and atopic disease in modern populations. More broadly, our data highlights the importance of defining the genetic architecture of disease across genetically diverse populations, and that disease insights derived from GWAS in one population may not translate to all affected populations."
+
+}

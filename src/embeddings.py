@@ -1,8 +1,29 @@
 from google import genai
-from google.genai import types
 
+import dotenv
+import os
+
+dotenv.load_dotenv()
+
+EMBEDDING_MODEL = "text-embedding-004"
+
+class Embedder:
+    def __init__(self):
+        pass
+        # embeddings will be useful when we need to create vector search for further queries, especially if the data is large.
+        # for now, it's overkill
+
+    def embed(self, text):
+        client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+        response = client.models.embed_content(
+            model= EMBEDDING_MODEL,
+            contents=text,
+        )
+        return response.embeddings
+    
 if __name__ == "__main__":
-    genai.configure(api_key="YOUR_API_KEY")
-    model = genai.Client().models.get("gemini-2.0-flash")
-    response = model.generate("Hello, how are you?")
-    print(response.text)
+    embedder = Embedder()
+    response = embedder.embed("Explain how AI works in a few words")
+    print(response)
+    # embedder = Embedder()
+    # print(embedder.embed("Hello, how are you?"))
