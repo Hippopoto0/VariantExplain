@@ -61,11 +61,12 @@ class Agent:
     
         trait_info_with_images = []
         for trait in llm_info:
+            image_result = self.find_image(trait['trait_title'])
             trait_info_with_images.append({
                 "trait_title": trait['trait_title'],
                 "increase_decrease": trait['increase_decrease'],
                 "details": trait['details'],
-                "image_url": self.find_image(trait['trait_title'])
+                "image_url": image_result['image_url'] if image_result else None
             })
 
         return trait_info_with_images

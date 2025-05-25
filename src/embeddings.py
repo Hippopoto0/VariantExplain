@@ -9,17 +9,17 @@ EMBEDDING_MODEL = "text-embedding-004"
 
 class Embedder:
     def __init__(self):
-        pass
-        # embeddings will be useful when we need to create vector search for further queries, especially if the data is large.
-        # for now, it's overkill
+        genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+        self.model = genai.GenerativeModel('gemini-pro')
 
     def embed(self, text):
-        client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
-        response = client.models.embed_content(
-            model= EMBEDDING_MODEL,
-            contents=text,
+        response = self.model.generate_content(
+            text,
+            generation_config=genai.GenerativeModel.GenerativeConfig(
+                embedding=True
+            )
         )
-        return response.embeddings
+        return response.embedding
     
 if __name__ == "__main__":
     embedder = Embedder()
