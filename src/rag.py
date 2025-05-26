@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from typing import List, Dict, Any
 import re
 import time
+from tqdm import tqdm
 
 NCBI_EMAIL = "kbkyeofzdwcccsjzzy@nespj.com"  # Replace with your real email for NCBI API
 EUTILS_BASE_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
@@ -32,7 +33,8 @@ class RAG:
         GWAS_data = []
         hugoes = re.findall(r'HGNC:([0-9]+)', annotations_raw)
         hugoes = list(dict.fromkeys(hugoes))
-        for hugo in hugoes:
+        print(f"Found {len(hugoes)} unique genes to search GWAS for.")
+        for hugo in tqdm(hugoes):
             url = (
                 f"https://www.ebi.ac.uk/gwas/api/search?q=(text%3A%22HGNC%3A{hugo}%22+OR+title%3A%22HGNC%3A{hugo}%22+OR+synonyms%3A%22HGNC%3A{hugo}%22)"
                 "+AND+-resourcename%3Astudy&generalTextQuery=true&size=100&sort=studyCount,desc"
@@ -129,7 +131,7 @@ class RAG:
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    with open("src/annotation.json", "r") as f:
+    with open("generated_annotation/annotation.json", "r") as f:
         annotations_raw = f.read()
     rag = RAG()
     print("Searching GWAS for VEP variants...")
