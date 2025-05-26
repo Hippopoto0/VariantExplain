@@ -100,24 +100,68 @@ class Agent:
         Returns:
             List[Dict]: List of trait summaries with images.
         """
-        llm_info = self.summarise_traits_no_images(traits)
-        trait_info_with_images = []
-        for trait in llm_info:
-            image_url = self.find_image(trait.get('trait_title', ''))
-            trait_info_with_images.append({
-                "trait_title": trait.get('trait_title', ''),
-                "increase_decrease": trait.get('increase_decrease', ''),
-                "details": trait.get('details', ''),
-                "good_or_bad": trait.get('good_or_bad', ''),
-                "image_url": image_url
-            })
-        return trait_info_with_images
+        traits = traits.replace("```json", "").replace("```", "")
+        traits = json.loads(traits)
+        print("before", len(traits))
+        
+        def parse_number(s):
+            """Helper to safely parse numbers that might be in scientific notation"""
+            try:
+                return float(s)
+            except (ValueError, TypeError):
+                return None
+
+        # Create a new list with only the traits we want to keep
+        filtered_traits = []
+        for trait in traits:
+            # Skip if any required fields are missing
+            if (trait.get('trait_title') == 'N/A' or 
+                trait.get('abstract') is None or
+                'pValue' not in trait):
+                continue
+                
+            # Parse p-value (handle scientific notation)
+            pval = parse_number(trait['pValue'])
+            if pval is None or pval >= 0.01:  # Skip if p-value is missing or >= 0.01
+                continue
+                
+            # Handle OR value
+            or_val = trait.get('OR')
+            if or_val in ('', 'N/A', None):
+                continue
+                
+            try:
+                or_float = float(or_val)
+                if abs(or_float - 1) < 0.15:  # Skip if OR is too close to 1.0
+                    continue
+            except (ValueError, TypeError):
+                continue
+                
+            # If we get here, keep the trait
+            filtered_traits.append(trait)
+        print("after", len(filtered_traits))
+        traits = filtered_traits
+        print(filtered_traits[:10])
+        
+        # llm_info = self.summarise_traits_no_images(traits)
+        # trait_info_with_images = []
+        # for trait in llm_info:
+        #     image_url = self.find_image(trait.get('trait_title', ''))
+        #     trait_info_with_images.append({
+        #         "trait_title": trait.get('trait_title', ''),
+        #         "increase_decrease": trait.get('increase_decrease', ''),
+        #         "details": trait.get('details', ''),
+        #         "good_or_bad": trait.get('good_or_bad', ''),
+        #         "image_url": image_url
+        #     })
+        # return trait_info_with_images
 
 if __name__ == "__main__":
     import sys
     logging.basicConfig(level=logging.INFO)
     agent = Agent()
-    example_path = "testing_data/example_before_summary.txt"
+    # example_path = "testing_data/example_before_summary.txt"
+    example_path = "generated_annotation/final_rag_results.json"
     if os.path.exists(example_path):
         with open(example_path, "r") as f:
             info = f.read()

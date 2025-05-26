@@ -2,6 +2,7 @@ import json
 import requests
 import logging
 from bs4 import BeautifulSoup
+from collections import defaultdict
 from typing import List, Dict, Any, Optional
 import re
 import time
@@ -28,6 +29,8 @@ class RAG:
         # if making many requests to the same host.
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': f'Python RAG Module ({NCBI_EMAIL})'})
+        # Track processed PubMed IDs to avoid duplicate fetches
+        self.processed_pmids = set()
 
     def _fetch_gwas_docs_for_hugo(self, hugo: str) -> List[Dict[str, Any]]:
         """Helper function to fetch GWAS docs for a single HGNC ID."""
@@ -191,14 +194,13 @@ class RAG:
         Returns:
             List[Dict]: List with 'abstract' field added to each trait.
         """
-        pmids_to_fetch = {} # Use a dict to store trait references by pmid for easy update
-        for i, trait in enumerate(associated_traits):
-            pmid = trait.get("pubmedId")
-            if pmid and pmid != "N/A":
-                # Store a reference to the trait dict, not a copy
-                if pmid not in pmids_to_fetch:
-                    pmids_to_fetch[pmid] = []
-                pmids_to_fetch[pmid].append(trait)
+        pmids_to_fetch = defaultdict(list)
+        for trait in associated_traits:
+            if 'pubmedId' in trait and trait['pubmedId'] and trait['pubmedId'] != 'N/A':
+                pmid = trait['pubmedId']
+                if pmid not in self.processed_pmids:
+                    pmids_to_fetch[pmid].append(trait)
+                    self.processed_pmids.add(pmid)
         
         if not pmids_to_fetch:
             print("No unique PubMed IDs found to fetch abstracts for.")
