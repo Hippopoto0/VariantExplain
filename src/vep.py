@@ -166,12 +166,12 @@ def process_vcf_file_parallel(input_vcf_path, output_json_path, max_workers=10):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python vep_vcf_annotator.py <input_vcf_file> <output_json_file>\n Example: oetry run python src/vep.py data/S1.haplotypecaller.filtered.vcf src/annotation.json")
+    if len(sys.argv) != 2:
+        print("Usage: poetry run python src/vep.py <input_vcf_file>\n Example: poetry run python src/vep.py data/S1.haplotypecaller.filtered.vcf")
         sys.exit(1)
 
     input_vcf = sys.argv[1]
-    output_json = sys.argv[2]
+    output_json = "generated_annotation/annotation.json"
 
     print(f"Starting VCF annotation for {input_vcf}...")
     # You can adjust max_workers here. A value between 10-30 is usually a good starting point.
