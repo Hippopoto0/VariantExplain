@@ -1,3 +1,7 @@
+<script lang="ts">
+    import VCFFileUpload from "$lib/components/VCFFileUpload.svelte";
+</script>
+
 <main class="relative flex size-full min-h-screen flex-col bg-[#f8fcfa] group/design-root overflow-x-hidden" style='font-family: Manrope, "Noto Sans", sans-serif;'>
     <div class="layout-container flex h-full grow flex-col">
       <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e6f4ef] px-10 py-3">
@@ -38,19 +42,7 @@
               <p class="text-[#46a080] text-sm font-normal leading-normal">Upload your VCF file to analyze potential health conditions.</p>
             </div>
           </div>
-          <div class="flex flex-col p-4">
-            <div class="flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-[#cde9df] px-6 py-14">
-              <div class="flex max-w-[480px] flex-col items-center gap-2">
-                <p class="text-[#0c1c17] text-lg font-bold leading-tight tracking-[-0.015em] max-w-[480px] text-center">Drag and drop your VCF file here</p>
-                <p class="text-[#0c1c17] text-sm font-normal leading-normal max-w-[480px] text-center">Or browse to select a file from your computer</p>
-              </div>
-              <button
-                class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#e6f4ef] text-[#0c1c17] text-sm font-bold leading-normal tracking-[0.015em]"
-              >
-                <span class="truncate">Browse Files</span>
-              </button>
-            </div>
-          </div>
+         <VCFFileUpload />
         </div>
         <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
           <h2 class="text-[#0c1c17] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Processing Steps</h2>
