@@ -161,7 +161,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     agent = Agent()
     # example_path = "testing_data/example_before_summary.txt"
-    example_path = "generated_annotation/final_rag_results.json"
+    example_path = "generated_annotation/final_rag_results_from_rsid_danger.json"
     if os.path.exists(example_path):
         with open(example_path, "r") as f:
             info = f.read()
