@@ -1,11 +1,11 @@
 <script lang="ts">
-    let file: File | null = $state(null);
+    import { fileState, setFile } from "$lib/states/fileState.svelte";
 
     function handleFileChange(event: Event) {
         const target = event.target as HTMLInputElement;
         const files = target.files;
         if (files && files.length > 0) {
-            file = files[0];
+            setFile(files[0]);
             // Reset the input value to allow selecting the same file again
             target.value = '';
         }
@@ -17,7 +17,7 @@
     <div class="absolute flex flex-col p-4">
         <div class={`relative flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-[#cde9df] px-6 py-14 
         transition-all duration-300 ease-in-out
-        ${file ? 'invisible opacity-0 translate-y-10' : 'visible opacity-100 translate-y-0'}`}>
+        ${fileState.file ? 'invisible opacity-0 translate-y-10' : 'visible opacity-100 translate-y-0'}`}>
             <div class="flex max-w-[480px] flex-col items-center gap-2">
             <p class="text-[#0c1c17] text-lg font-bold leading-tight tracking-[-0.015em] max-w-[480px] text-center">Drag and drop your VCF file here</p>
             <p class="text-[#0c1c17] text-sm font-normal leading-normal max-w-[480px] text-center">Or browse to select a file from your computer</p>
@@ -32,12 +32,12 @@
     </div>
     <div class={`absolute size-full flex flex-col items-center justify-center p-4 h-24 max-w-[480px] rounded-xl border-2 border-dashed border-[#cde9df]
     transition-all duration-300 ease-in-out
-    ${file ? 'visible opacity-100 translate-y-0' : 'invisible opacity-0 -translate-y-10'}`}>
+    ${fileState.file ? 'visible opacity-100 translate-y-0' : 'invisible opacity-0 -translate-y-10'}`}>
         <span class="flex items-center gap-2">
             <div class="flex items-center gap-2">
-            <h1 class="text-green-700 text-lg font-bold leading-tight tracking-[-0.015em]">{file?.name}</h1>
+            <h1 class="text-green-700 text-lg font-bold leading-tight tracking-[-0.015em]">{fileState.file?.name}</h1>
             <button 
-                onclick={(e) => {e.stopPropagation(); file = null}}
+                onclick={(e) => {e.stopPropagation(); setFile(null)}}
                 class="text-gray-500 hover:text-red-500 transition-colors"
                 aria-label="Remove file"
             >
