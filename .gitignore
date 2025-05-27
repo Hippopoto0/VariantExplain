@@ -1,3 +1,4 @@
 .env
 generated_annotation
 src/annotation.json
+__pycache__
