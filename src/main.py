@@ -72,13 +72,11 @@ def handle_variant_explain(variant_input: UploadedFile) -> Optional[list]:
             temp_vcf.write(variant_input.read())
             temp_vcf_path = temp_vcf.name
         parser = VCFParser(temp_vcf_path)
-        st.write("Querying GWAS...")
+        st.write("Querying GWAS and fetching abstracts...")
         rag = RAG()
-        found_traits = rag.search_annotations(json.dumps(parser.annotation))
-        st.write("Generating abstracts...")
-        abstracts = rag.append_pubmed_abstracts(found_traits)
+        results = rag.process_vep_data(parser.annotation)
         st.write("Done!")
-        return abstracts
+        return results
     except Exception as e:
         logging.error(f"Error in variant explain workflow: {e}")
         st.error(f"An error occurred: {e}")

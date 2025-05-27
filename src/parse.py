@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Optional, Any
 import vcfpy
-from vep import process_vcf_file
+from vep import process_vcf_file_parallel
 
 class VCFParser:
     """
@@ -29,7 +29,7 @@ class VCFParser:
         """
         try:
             output_path = 'src/annotation.json'
-            process_vcf_file(self.vcf_path, output_path)
+            process_vcf_file_parallel(self.vcf_path, output_path)
             if not os.path.exists(output_path):
                 raise FileNotFoundError(f"Annotation file not found at {output_path}")
             with open(output_path, 'r') as f:

@@ -92,16 +92,17 @@ class Agent:
             logging.warning(f"Image fetch failed for '{trait_title}': {e}")
         return None
 
-    def summarise_traits(self, traits: str) -> List[Dict]:
+    def summarise_traits(self, traits: str | List[Dict]) -> List[Dict]:
         """
         Summarize traits and fetch images for each trait.
         Args:
-            traits (str): GWAS traits info string.
+            traits (str | List[Dict]): GWAS traits info as either a JSON string or a list of dicts.
         Returns:
             List[Dict]: List of trait summaries with images.
         """
-        traits = traits.replace("```json", "").replace("```", "")
-        traits = json.loads(traits)
+        if isinstance(traits, str):
+            traits = traits.replace("```json", "").replace("```", "")
+            traits = json.loads(traits)
         print("before", len(traits))
         
         def parse_number(s):
@@ -143,18 +144,22 @@ class Agent:
         traits = filtered_traits
         print(filtered_traits[:10])
         
-        # llm_info = self.summarise_traits_no_images(traits)
-        # trait_info_with_images = []
-        # for trait in llm_info:
-        #     image_url = self.find_image(trait.get('trait_title', ''))
-        #     trait_info_with_images.append({
-        #         "trait_title": trait.get('trait_title', ''),
-        #         "increase_decrease": trait.get('increase_decrease', ''),
-        #         "details": trait.get('details', ''),
-        #         "good_or_bad": trait.get('good_or_bad', ''),
-        #         "image_url": image_url
-        #     })
-        # return trait_info_with_images
+        # Convert traits to a string representation for the LLM
+        traits_str = json.dumps(traits, indent=2)
+        llm_info = self.summarise_traits_no_images(traits_str)
+        
+        trait_info_with_images = []
+        for trait in llm_info:
+            image_url = self.find_image(trait.get('trait_title', ''))
+            trait_info_with_images.append({
+                'trait_title': trait.get('trait_title'),
+                'increase_decrease': trait.get('increase_decrease', 'N/A'),
+                'details': trait.get('details', 'No details available'),
+                'good_or_bad': trait.get('good_or_bad', 'Neutral'),
+                'image_url': image_url
+            })
+            
+        return trait_info_with_images
 
 if __name__ == "__main__":
     import sys
