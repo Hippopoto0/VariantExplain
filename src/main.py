@@ -12,7 +12,6 @@ from streamlit.runtime.uploaded_file_manager import UploadedFile
 from parse import VCFParser
 from rag import RAG
 from agent import Agent
-from models import TraitSummary, GwasAssociation
 
 st.set_page_config(
     page_title="Variant Explain",
@@ -30,10 +29,10 @@ def extract_percentage_and_color(item: Dict[str, Any]) -> tuple[float, str]:
     Extract the percentage and color code based on good/bad status.
     """
     try:
-        match = re.search(r'([\d.]+)%', getattr(item, 'increase_decrease', '') or '')
+        match = re.search(r'([\d.]+)%', item.get('increase_decrease', ''))
         if match:
             percentage = float(match.group(1))
-            color = "green" if (getattr(item, 'good_or_bad', '') or '').lower() == "good" else "red"
+            color = "green" if item.get('good_or_bad', '').lower() == "good" else "red"
         else:
             percentage = 0.0
             color = "yellow"
@@ -42,7 +41,7 @@ def extract_percentage_and_color(item: Dict[str, Any]) -> tuple[float, str]:
         color = "yellow"
     return percentage, color
 
-def display_trait_info(trait_info_with_images: list[TraitSummary]) -> None:
+def display_trait_info(trait_info_with_images: list) -> None:
     """
     Display trait info cards in the Streamlit UI.
     """
@@ -50,20 +49,20 @@ def display_trait_info(trait_info_with_images: list[TraitSummary]) -> None:
         percentage, color = extract_percentage_and_color(item)
         col1, col2 = st.columns([1, 3])
         with col1:
-            if getattr(item, 'image_url', None):
-                st.image(item.image_url, width=100)
+            if item.get('image_url'):
+                st.image(item['image_url'], width=100)
         with col2:
             title_col, perc_col = st.columns([2, 1])
             with title_col:
-                with st.expander(f"#### {getattr(item, 'trait_title', '')}", expanded=False):
-                    st.write(getattr(item, 'details', "No additional details available"))
+                with st.expander(f"#### {item.get('trait_title', '')}", expanded=False):
+                    st.write(item.get('details', "No additional details available"))
             with perc_col:
                 st.markdown(
                     f"<p style='color: {color}; font-size: 18px;'>{percentage:+.1f}%</p>",
                     unsafe_allow_html=True
                 )
 
-def handle_variant_explain(variant_input: UploadedFile) -> Optional[list[GwasAssociation]]:
+def handle_variant_explain(variant_input: UploadedFile) -> Optional[list]:
     """
     Handle the variant explain workflow: VEP annotation, GWAS search, abstract generation.
     """

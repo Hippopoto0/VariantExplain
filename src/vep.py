@@ -5,7 +5,6 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import random
-from models import VepVariant
 
 # --- Configuration ---
 SERVER = "https://rest.ensembl.org"

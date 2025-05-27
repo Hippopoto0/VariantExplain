@@ -1,8 +1,7 @@
 """
 Agent module for summarizing GWAS traits and fetching related images.
 """
-from typing import List, Optional
-from pydantic import parse_obj_as
+from typing import List, Dict, Optional
 import os
 import json
 import requests
@@ -10,7 +9,6 @@ from bs4 import BeautifulSoup
 from google import genai
 import dotenv
 import logging
-from models import TraitSummary
 
 dotenv.load_dotenv()
 GEN_MODEL = "gemini-2.0-flash"
@@ -29,13 +27,13 @@ class Agent:
             logging.error(f"Failed to initialize genai client: {e}")
             raise
 
-    def summarise_traits_no_images(self, info: str) -> List[TraitSummary]:
+    def summarise_traits_no_images(self, info: str) -> List[Dict]:
         """
         Summarize GWAS traits using LLM, returning structured data.
         Args:
             info (str): GWAS information string.
         Returns:
-            List[TraitSummary]: List of trait summaries.
+            List[Dict]: List of trait summaries.
         """
         prompt = f"""
             You are a medical doctor, part of a program that helps patients understand their genetic variants, along with the GWAS traits they are associated with.
@@ -65,8 +63,7 @@ class Agent:
             )
             # Clean up LLM response
             clean_text = response.text.replace("```json", "").replace("```", "")
-            trait_list = json.loads(clean_text)
-            return parse_obj_as(List[TraitSummary], trait_list)
+            return json.loads(clean_text)
         except Exception as e:
             logging.error(f"Error in summarise_traits_no_images: {e}")
             return []
@@ -95,74 +92,73 @@ class Agent:
             logging.warning(f"Image fetch failed for '{trait_title}': {e}")
         return None
 
-    def summarise_traits(self, traits: str | List[TraitSummary]) -> List[TraitSummary]:
+    def summarise_traits(self, traits: str | List[Dict]) -> List[Dict]:
         """
         Summarize traits and fetch images for each trait.
         Args:
-            traits (str | List[TraitSummary]): GWAS traits info as either a JSON string or a list of TraitSummary.
+            traits (str | List[Dict]): GWAS traits info as either a JSON string or a list of dicts.
         Returns:
-            List[TraitSummary]: List of trait summaries with images.
+            List[Dict]: List of trait summaries with images.
         """
         if isinstance(traits, str):
             traits = traits.replace("```json", "").replace("```", "")
-            trait_dicts = json.loads(traits)
-            traits = parse_obj_as(List[TraitSummary], trait_dicts)
+            traits = json.loads(traits)
         print("before", len(traits))
         
-        # Filtering logic can be moved into Pydantic validation if desired
         def parse_number(s):
+            """Helper to safely parse numbers that might be in scientific notation"""
             try:
                 return float(s)
             except (ValueError, TypeError):
                 return None
 
+        # Create a new list with only the traits we want to keep
         filtered_traits = []
         for trait in traits:
             # Skip if any required fields are missing
-            if getattr(trait, 'trait_title', 'N/A') == 'N/A':
+            if (trait.get('trait_title') == 'N/A' or 
+                trait.get('abstract') is None or
+                'pValue' not in trait):
                 continue
-            if getattr(trait, 'details', None) is None:
+                
+            # Parse p-value (handle scientific notation)
+            pval = parse_number(trait['pValue'])
+            if pval is None or pval >= 0.01:  # Skip if p-value is missing or >= 0.01
                 continue
-
-            pval = None
-            # Try to get pValue if present (from GwasAssociation, fallback to details if string)
-            if hasattr(trait, 'pValue'):
-                pval = getattr(trait, 'pValue', None)
-            if pval is None and hasattr(trait, 'details') and isinstance(trait.details, dict):
-                pval = trait.details.get('pValue', None)
-            if pval is not None:
-                try:
-                    pval = float(pval)
-                except (ValueError, TypeError):
-                    pval = None
-            if pval is None or pval >= 0.01:
-                continue
-
-            # Handle OR value (if present)
-            or_val = getattr(trait, 'OR', None)
+                
+            # Handle OR value
+            or_val = trait.get('OR')
             if or_val in ('', 'N/A', None):
                 continue
+                
             try:
                 or_float = float(or_val)
-                if abs(or_float - 1) < 0.15:
+                if abs(or_float - 1) < 0.15:  # Skip if OR is too close to 1.0
                     continue
             except (ValueError, TypeError):
                 continue
-
+                
+            # If we get here, keep the trait
             filtered_traits.append(trait)
         print("after", len(filtered_traits))
         traits = filtered_traits
         print(filtered_traits[:10])
         
         # Convert traits to a string representation for the LLM
-        traits_str = json.dumps([t.dict() for t in traits], indent=2)
+        traits_str = json.dumps(traits, indent=2)
         llm_info = self.summarise_traits_no_images(traits_str)
         
         trait_info_with_images = []
         for trait in llm_info:
-            image_url = self.find_image(trait.trait_title)
-            trait_info_with_images.append(TraitSummary(**trait.dict(), image_url=image_url))
-        
+            image_url = self.find_image(trait.get('trait_title', ''))
+            trait_info_with_images.append({
+                'trait_title': trait.get('trait_title'),
+                'increase_decrease': trait.get('increase_decrease', 'N/A'),
+                'details': trait.get('details', 'No details available'),
+                'good_or_bad': trait.get('good_or_bad', 'Neutral'),
+                'image_url': image_url
+            })
+            
         return trait_info_with_images
 
 if __name__ == "__main__":

@@ -3,9 +3,7 @@ import requests
 import logging
 from bs4 import BeautifulSoup
 from collections import defaultdict
-from typing import Tuple, List, Optional
-from models import GwasAssociation, TraitSummary
-from pydantic import parse_obj_as
+from typing import Tuple, Dict, Any, List, Optional
 import re
 import time
 from tqdm import tqdm
@@ -32,8 +30,8 @@ class RAG:
         self.session.headers.update({'User-Agent': f'Python RAG Module ({NCBI_EMAIL})'})
         self.processed_pmids = set()
 
-    def _fetch_gwas_associations_for_rsid(self, variant_details: Tuple[str, str, str]) -> List[GwasAssociation]:
-        extracted_associations: List[GwasAssociation] = []
+    def _fetch_gwas_associations_for_rsid(self, variant_details: Tuple[str, str, str]) -> List[Dict[str, Any]]:
+        extracted_associations = []
         gene_symbol, rsid, vep_risk_allele = variant_details
         
         if not vep_risk_allele:
@@ -81,7 +79,7 @@ class RAG:
                             allele_char_from_label = label_val.split('-')[-1]
                         else:
                             allele_char_from_label = label_val
-
+                    
                     if allele_char_from_key == vep_risk_allele:
                         is_correct_risk_allele_for_assoc = True
                         matched_api_allele_representation = label_val or allele_char_from_key
@@ -97,27 +95,25 @@ class RAG:
                 p_value_exponent = assoc.get("pValueExponent")
                 p_value_mantissa = assoc.get("pValue")
                 calculated_p_value = (
-                    f"{p_value_mantissa}e{p_value_exponent}" if p_value_exponent is not None and p_value_mantissa is not None else None
+                    f"{p_value_mantissa}e{p_value_exponent}" if p_value_exponent is not None and p_value_mantissa is not None else "N/A"
                 )
                 
                 odds_ratio = assoc.get("orValue")
                 if odds_ratio is None:
-                    odds_ratio = assoc.get("oddsRatio", None)
+                    odds_ratio = assoc.get("oddsRatio", "N/A")
 
-                if odds_ratio is not None or (isinstance(beta_value, (int, float))):
-                    assoc_obj = GwasAssociation(
-                        gene_symbol=gene_symbol,
-                        rsid=rsid,
-                        vep_risk_allele=vep_risk_allele,
-                        trait_title=trait_name,
-                        pValue=float(calculated_p_value) if calculated_p_value else None,
-                        abstract=None,
-                        pubmedId=pubmed_id,
-                        details=None,
-                        increase_decrease=None,
-                        good_or_bad=None
-                    )
-                    extracted_associations.append(assoc_obj)
+                if odds_ratio != "N/A" or (isinstance(beta_value, (int, float))):
+                    extracted_associations.append({
+                        "traitName": trait_name,
+                        "beta": beta_value,
+                        "pubmedId": pubmed_id,
+                        "riskAllele_GWAS": matched_api_allele_representation,
+                        "pValue": calculated_p_value,
+                        "OR": odds_ratio,
+                        "gene_symbol_from_vep": gene_symbol,
+                        "rsid_from_vep": rsid,
+                        "risk_allele_from_vep": vep_risk_allele
+                    })
             
         except requests.exceptions.RequestException as e:
             logging.warning(f"Request failed for GWAS associations for rsID {rsid} (Gene: {gene_symbol}): {e}")
@@ -129,7 +125,7 @@ class RAG:
             logging.warning(f"JSON decode failed for GWAS associations for rsID {rsid} (Gene: {gene_symbol}). Response: {response_text}...")
         return extracted_associations
 
-    def find_damaging_variants_info(self, variants_data: List[dict]) -> List[Tuple[str, str, str]]:
+    def find_damaging_variants_info(self, variants_data: List[Dict[str, Any]]) -> List[Tuple[str, str, str]]:
         damaging_info = set()
         if not isinstance(variants_data, list):
             logging.error("Input VEP data must be a list of variant objects.")
@@ -212,16 +208,16 @@ class RAG:
             logging.warning(f"Unexpected error fetching abstract for PubMed ID {pubmed_id}: {e}")
             return None
 
-    def append_pubmed_abstracts(self, gwas_associations: List[GwasAssociation]) -> List[GwasAssociation]:
+    def append_pubmed_abstracts(self, gwas_associations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         pmids_to_fetch_map = defaultdict(list)
         for assoc_item in gwas_associations:
-            pmid = getattr(assoc_item, 'pubmedId', None)
-            if not pmid:
-                continue
-            pmids_to_fetch_map[pmid].append(assoc_item)
-
-        # No longer need to check for 'abstract' key existence, as Pydantic models use attributes.
-
+            pmid = assoc_item.get('pubmedId')
+            if pmid and pmid != 'N/A' and pmid not in self.processed_pmids:
+                pmids_to_fetch_map[pmid].append(assoc_item)
+            # Ensure 'abstract' key exists even if pmid is invalid/processed or already fetched
+            if 'abstract' not in assoc_item: 
+                 assoc_item['abstract'] = None # Default to None
+        
         if not pmids_to_fetch_map:
             logging.info("No new unique PubMed IDs to fetch abstracts for in this batch.")
             return gwas_associations
@@ -241,15 +237,15 @@ class RAG:
                     abstract = future.result()
                     self.processed_pmids.add(pmid) # Mark as processed (even if abstract is None)
                     for assoc_item_ref in pmids_to_fetch_map[pmid]:
-                        setattr(assoc_item_ref, 'abstract', abstract)
+                        assoc_item_ref["abstract"] = abstract
                 except Exception as exc:
                     logging.error(f"Error processing abstract future for PMID {pmid}: {exc}")
                     for assoc_item_ref in pmids_to_fetch_map[pmid]: # Ensure abstract is None on error
-                        setattr(assoc_item_ref, 'abstract', None)
+                        assoc_item_ref["abstract"] = None
         
         return gwas_associations
 
-    def process_vep_data(self, vep_data: List[dict]) -> List[GwasAssociation]:
+    def process_vep_data(self, vep_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         logging.info("Initiating VEP data processing workflow...")
 
         logging.info("Identifying potentially damaging variants...")
@@ -287,7 +283,7 @@ class RAG:
         logging.info(f"Appending PubMed abstracts using up to {MAX_WORKERS_PUBMED} workers...")
         results_with_abstracts = self.append_pubmed_abstracts(all_gwas_associations)
         
-        num_with_abstracts = sum(1 for item in results_with_abstracts if getattr(item, 'abstract', None))
+        num_with_abstracts = sum(1 for item in results_with_abstracts if item.get('abstract'))
         logging.info(f"PubMed abstract processing complete. {num_with_abstracts} out of {len(results_with_abstracts)} associations now have abstract data (or attempted fetch).")
         
         return results_with_abstracts
@@ -318,9 +314,9 @@ if __name__ == '__main__':
     if final_results:
         logging.info(f"Processing complete. Obtained {len(final_results)} final association records.")
         logging.info("Sample results (first 2 examples, if available):")
-        for item in final_results[:2]:
-            abstract_len = len(getattr(item, 'abstract', '') or '')
-            logging.info(f"  - Trait: {getattr(item, 'trait_title', None)}, PMID: {getattr(item, 'pubmedId', None)}, Gene (VEP): {getattr(item, 'gene_symbol', None)}, Abstract Length: {abstract_len} chars")
+        for i, item in enumerate(final_results[:2]):
+            abstract_len = len(item.get('abstract') or '')
+            logging.info(f"  - Trait: {item.get('traitName')}, PMID: {item.get('pubmedId')}, Gene (VEP): {item.get('gene_symbol_from_vep')}, Abstract Length: {abstract_len} chars")
         if len(final_results) > 2:
             logging.info(f"  ...and {len(final_results) - 2} more processed associations.")
 
