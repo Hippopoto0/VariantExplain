@@ -5,6 +5,7 @@ import os
 import json
 import logging
 from typing import Optional, Any
+from models import VepVariant, VcfParseResult
 import vcfpy
 from vep import process_vcf_file_parallel
 
