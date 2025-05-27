@@ -1,6 +1,15 @@
 <script lang="ts">
     import VCFFileUpload from "$lib/components/VCFFileUpload.svelte";
 	import { fileState } from "$lib/states/fileState.svelte";
+	import { onMount } from "svelte";
+  import type { HealthResponse } from "../clients/clients";
+
+  onMount(async () => {
+    const res = await fetch("http://localhost:8000/health");
+    const resJSON: HealthResponse = await res.json();
+    
+    console.log(resJSON.status);
+  });
 </script>
 
 <main class="relative flex size-full min-h-screen flex-col bg-[#f8fcfa] group/design-root overflow-x-hidden" style='font-family: Manrope, "Noto Sans", sans-serif;'>
