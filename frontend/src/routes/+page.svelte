@@ -1,5 +1,6 @@
 <script lang="ts">
     import VCFFileUpload from "$lib/components/VCFFileUpload.svelte";
+	import { fileState } from "$lib/states/fileState.svelte";
 </script>
 
 <main class="relative flex size-full min-h-screen flex-col bg-[#f8fcfa] group/design-root overflow-x-hidden" style='font-family: Manrope, "Noto Sans", sans-serif;'>
@@ -43,8 +44,19 @@
             </div>
           </div>
          <VCFFileUpload />
+         <div class="mt-4"></div>
+         <button
+          class={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-emerald-600 text-white text-sm font-bold leading-normal tracking-[0.015em] 
+          transition-all duration-300 ease-in-out
+          ${fileState.file ? 'visible opacity-100 translate-y-0 delay-150' : 'invisible opacity-0 -translate-y-4 duration-75 delay-0'}`}
+          onclick={() => {
+              
+          }}
+          >
+          <span class="truncate">Analyse Variants</span>
+         </button>
         </div>
-        <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+        <div class="layout-content-container flex flex-col max-w-[960px] flex-1 ml-6">
           <h2 class="text-[#0c1c17] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Processing Steps</h2>
           <div class="flex flex-col gap-3 p-4">
             <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Generating VEP</p></div>

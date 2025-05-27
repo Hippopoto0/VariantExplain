@@ -13,9 +13,13 @@
 </script>
 
 <div class="relative">
-
-    <div class="absolute flex flex-col p-4">
-        <div class={`relative flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-[#cde9df] px-6 py-14 
+    <div class="relative w-full">
+        <div class="h-24 max-w-[480px] sm:h-auto sm:py-14 mx-auto"
+             style="height: ${fileState.file ? '224px' : '96px'};">
+        </div>
+    </div>
+    <div class="absolute flex flex-col p-4 top-0 left-0 right-0">
+        <div class={`relative flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-[#cde9df] px-6 py-14 bg-gray-50
         transition-all duration-300 ease-in-out
         ${fileState.file ? 'invisible opacity-0 translate-y-10' : 'visible opacity-100 translate-y-0'}`}>
             <div class="flex max-w-[480px] flex-col items-center gap-2">
@@ -30,7 +34,7 @@
             <input type="file" accept=".vcf" oninput={handleFileChange} class="absolute inset-0 opacity-0 size-full" />
         </div>
     </div>
-    <div class={`absolute size-full flex flex-col items-center justify-center p-4 h-24 max-w-[480px] rounded-xl border-2 border-dashed border-[#cde9df]
+    <div class={`absolute size-full flex flex-col top-0 items-center justify-center p-4 h-24 max-w-[480px] rounded-xl border-2 border-dashed border-[#cde9df]
     transition-all duration-300 ease-in-out
     ${fileState.file ? 'visible opacity-100 translate-y-0' : 'invisible opacity-0 -translate-y-10'}`}>
         <span class="flex items-center gap-2">
