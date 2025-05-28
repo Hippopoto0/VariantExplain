@@ -350,7 +350,18 @@ class RAG:
             logging.info("No GWAS associations to process PubMed abstracts for.")
             results_with_abstracts = []
             self._update_progress("fetch_pubmed_abstracts", 0, 0, "completed")
-        return results_with_abstracts
+        # --- Summarise Traits and Fetch Images ---
+        from agent import Agent
+        agent = Agent()
+        self._update_progress("summarise_traits", 0, 1, "in_progress")
+        try:
+            trait_summaries = agent.summarise_traits(results_with_abstracts)
+            self._update_progress("summarise_traits", 1, 1, "completed")
+        except Exception as e:
+            logging.error(f"Trait summarisation failed: {e}")
+            self._update_progress("summarise_traits", 0, 1, "error")
+            trait_summaries = []
+        return trait_summaries
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(module)s - %(message)s')

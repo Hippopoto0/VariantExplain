@@ -197,6 +197,22 @@
           </div>
           {/if}
 
+          {#if completedSteps.has('summarise_traits') || progressState.status === 'summarise_traits'}
+          <div class="flex flex-col gap-3 p-4" in:fade>
+            <div class="flex gap-6 justify-between">
+              <p class="text-[#0c1c17] text-base font-medium leading-normal">
+                {progressState.status === 'summarise_traits' ? 'Summarising Traits...' : 'Summarised Traits'}
+              </p>
+              {#if progressState.status !== 'summarise_traits' && completedSteps.has('summarise_traits')}
+                <span class="text-green-600">✓</span>
+              {/if}
+            </div>
+            {#if progressState.status === 'summarise_traits'}
+              <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage || 0}%`}></div></div>
+            {/if}
+          </div>
+          {/if}
+
           <div class={`absolute w-full min-h-[30rem] flex flex-col items-center justify-center text-center 
           
             ${progressState.status != "idle" ? 'invisible opacity-0 -translate-y-4 duration-75 delay-0' : 'visible opacity-100 translate-y-0 delay-150'}`}>

@@ -42,6 +42,8 @@ export const StatusPollResponseStatus = {
   find_damaging_variants: 'find_damaging_variants',
   fetch_gwas_associations: 'fetch_gwas_associations',
   fetch_pubmed_abstracts: 'fetch_pubmed_abstracts',
+  summarise_traits: 'summarise_traits',
+  completed: 'completed',
   error: 'error',
 } as const;
 

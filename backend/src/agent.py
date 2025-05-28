@@ -35,6 +35,8 @@ class Agent:
         Returns:
             List[Dict]: List of trait summaries.
         """
+
+        print("hrererer")
         prompt = f"""
             You are a medical doctor, part of a program that helps patients understand their genetic variants, along with the GWAS traits they are associated with.
             The GWAS catalog has been searched, and traits that show significance are listed below, along with important details such as the OR value. Each trait should also have an abstract from the study that found the association.
@@ -57,10 +59,12 @@ class Agent:
             {info}
         """
         try:
+            # print("prompt", prompt)
             response = self.client.models.generate_content(
                 model=GEN_MODEL,
                 contents=prompt,
             )
+            # print("response", response)
             # Clean up LLM response
             clean_text = response.text.replace("```json", "").replace("```", "")
             return json.loads(clean_text)
@@ -116,7 +120,7 @@ class Agent:
         filtered_traits = []
         for trait in traits:
             # Skip if any required fields are missing
-            if (trait.get('trait_title') == 'N/A' or 
+            if (trait.get('traitName') == 'N/A' or 
                 trait.get('abstract') is None or
                 'pValue' not in trait):
                 continue

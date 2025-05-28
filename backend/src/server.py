@@ -145,7 +145,7 @@ def run_analysis_thread(filename):
         
         # Process VEP data - this will update the progress file
         results = rag.process_vep_data(parser.annotation)
-        
+        print("results", results)
         # Check if processing completed successfully
         progress = get_progress()
         if progress.get("status") == "completed" and progress.get("step") == "fetch_pubmed_abstracts":
@@ -187,15 +187,7 @@ class StatusPollResponse(BaseModel):
         "find_damaging_variants",
         "fetch_gwas_associations",
         "fetch_pubmed_abstracts",
-        # "starting",
-        # "generating_vep", 
-        # "find_damaging_variants",
-        # "fetch_gwas_associations",
-        # "fetch_pubmed_abstracts",
-        # "fetching_risky_genes", 
-        # "fetching_trait_info", 
-        # "finding_associated_studies", 
-        # "summarising_results",
+        "summarise_traits",
         "completed",
         "error"
     ]
