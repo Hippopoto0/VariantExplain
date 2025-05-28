@@ -134,14 +134,28 @@ async def analysis() -> AnalysisResponse:
         state["analysis_running"] = True
     return AnalysisResponse(message="Analysis started")
 
+from typing import Optional
 class StatusPollResponse(BaseModel):
     status: Literal["idle", "generating_vep", "fetching_risky_genes", "fetching_trait_info", "finding_associated_studies", "summarising_results"]
+    progress: Optional[float] = 0
 
 @app.get("/status_poll")
 async def status_poll() -> StatusPollResponse:
     """Polling endpoint for status updates."""
     with state_lock:
-        return StatusPollResponse(status=state["status"])
+        status = state["status"]
+    progress = None
+    if status == "generating_vep":
+        try:
+            import json
+            progress_path = "generated_annotation/vep_progress.json"
+            if os.path.exists(progress_path):
+                with open(progress_path, "r") as pf:
+                    progress_data = json.load(pf)
+                    progress = progress_data.get("percentage")
+        except Exception as e:
+            progress = None
+    return StatusPollResponse(status=status, progress=progress)
 
 class HealthResponse(BaseModel):
     status: str

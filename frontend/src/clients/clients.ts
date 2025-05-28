@@ -44,8 +44,11 @@ export const StatusPollResponseStatus = {
   summarising_results: 'summarising_results',
 } as const;
 
+export type StatusPollResponseProgress = number | null;
+
 export interface StatusPollResponse {
   status: StatusPollResponseStatus;
+  progress?: StatusPollResponseProgress;
 }
 
 export type ValidationErrorLocItem = string | number;

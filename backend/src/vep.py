@@ -135,27 +135,43 @@ def process_vcf_file_parallel(input_vcf_path, output_json_path, max_workers=10):
         start_time = time.time()
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_batch_index = {
+            futures = {
                 executor.submit(send_vep_batch, batch, i): i
                 for i, batch in enumerate(batches)
             }
 
-            for future in as_completed(future_to_batch_index):
-                batch_index = future_to_batch_index[future]
+            completed_batches = 0
+            for future in as_completed(futures):
+                batch_idx = futures[future]
                 try:
-                    data = future.result()
-                    if data:
-                        all_annotations.extend(data)
-                except Exception as exc:
-                    print(f"Batch {batch_index} generated an unhandled exception: {exc}")
+                    batch_result = future.result()
+                    if batch_result:
+                        all_annotations.extend(batch_result)
+                        print(f"Batch {batch_idx} processed successfully (attempt 1).")
+                    else:
+                        print(f"Batch {batch_idx} failed after all attempts.")
+                except Exception as e:
+                    print(f"Batch {batch_idx} generated an exception: {e}")
+                    continue
+                # Write progress after each batch
+                completed_batches += 1
+                try:
+                    progress = {
+                        "current": completed_batches,
+                        "total": num_batches,
+                        "percentage": round(100 * completed_batches / num_batches, 1)
+                    }
+                    with open("generated_annotation/vep_progress.json", "w") as pf:
+                        json.dump(progress, pf)
+                except Exception as progress_e:
+                    print(f"Failed to write progress file: {progress_e}")
+            end_time = time.time()
+            print(f"Total processing time: {end_time - start_time:.2f} seconds")
+            print(f"Total VEP results received: {len(all_annotations)}")
 
-        end_time = time.time()
-        print(f"Total processing time: {end_time - start_time:.2f} seconds")
-        print(f"Total VEP results received: {len(all_annotations)}")
-
-        with open(output_json_path, 'w') as outfile:
-            json.dump(all_annotations, outfile, indent=2)
-        print(f"Annotation complete. Results saved to {output_json_path}")
+            with open(output_json_path, 'w') as outfile:
+                json.dump(all_annotations, outfile, indent=2)
+            print(f"Annotation complete. Results saved to {output_json_path}")
 
     except IOError as e:
         print(f"Error reading/writing file: {e}")

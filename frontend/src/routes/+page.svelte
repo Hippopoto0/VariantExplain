@@ -2,7 +2,7 @@
     import VCFFileUpload from "$lib/components/VCFFileUpload.svelte";
 	import { fileState } from "$lib/states/fileState.svelte";
 	import { onMount } from "svelte";
-  import type { AnalysisResponse, FileUploadResponse, HealthResponse } from "../clients/clients";
+  import type { AnalysisResponse, FileUploadResponse, HealthResponse, StatusPollResponse } from "../clients/clients";
 	import { setProgressState, progressState } from "$lib/states/progressState.svelte";
 	import { fade } from "svelte/transition";
 
@@ -18,10 +18,10 @@
   const startPolling = async () => {
     intervalId = setInterval(async () => {
       const res = await fetch("http://localhost:8000/status_poll");
-      const resJSON = await res.json();
+      const resJSON: StatusPollResponse = await res.json();
       console.log("Status:", resJSON.status);
-      setProgressState(resJSON.status);
-    }, 500);
+      setProgressState(resJSON.status, resJSON.progress ?? 0);
+    }, 200);
   }
 
   const stopPolling = () => {
@@ -127,13 +127,13 @@
           {#if progressState.status == "generating_vep"}
           <div class="flex flex-col gap-3 p-4">
             <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Generating VEP</p></div>
-            <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863]" style="width: 20%;"></div></div>
+            <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage}%`}></div></div>
           </div>
           {/if}
           {#if progressState.status == "fetching_risky_genes"}
           <div class="flex flex-col gap-3 p-4">
             <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Fetching Risky Genes</p></div>
-            <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863]" style="width: 40%;"></div></div>
+            <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage}%`}></div></div>
           </div>
           {/if}
           {#if progressState.status == "fetching_trait_info"}
