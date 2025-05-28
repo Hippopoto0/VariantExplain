@@ -101,6 +101,8 @@ def run_analysis_thread(filename):
     from rag import RAG
     import traceback
     import time
+    import json
+    import os
     
     def update_state(status, result=None, error=None):
         with state_lock:
@@ -109,6 +111,16 @@ def run_analysis_thread(filename):
                 state["result"] = result
             if error is not None:
                 state["error"] = error
+    
+    def get_progress():
+        progress_file = "generated_annotation/rag_progress.json"
+        if os.path.exists(progress_file):
+            try:
+                with open(progress_file, 'r') as f:
+                    return json.load(f)
+            except Exception as e:
+                logging.error(f"Error reading progress file: {e}")
+        return {}
     
     try:
         # Initialize state
@@ -125,16 +137,21 @@ def run_analysis_thread(filename):
         file_path = UPLOAD_DIR / filename
         parser = VCFParser(str(file_path))
         
-        # Initialize RAG and process VEP data
-        update_state("find_damaging_variants")
+        # Initialize RAG
         rag = RAG()
         
+        # Process VEP data - this will update progress to vep_annotation
+        update_state("vep_annotation")
+        
         # Process VEP data - this will update the progress file
-        update_state("fetch_gwas_associations")
         results = rag.process_vep_data(parser.annotation)
         
-        # Update state with final results
-        update_state("completed", result=results)
+        # Check if processing completed successfully
+        progress = get_progress()
+        if progress.get("status") == "completed" and progress.get("step") == "fetch_pubmed_abstracts":
+            update_state("completed", result=results)
+        else:
+            update_state("completed", result=results)  # Still mark as completed even if progress file is missing
         
     except Exception as e:
         error_msg = f"Error: {e}\n{traceback.format_exc()}"
@@ -192,10 +209,10 @@ class StatusPollResponse(BaseModel):
 async def status_poll() -> StatusPollResponse:
     """Polling endpoint for status updates."""
     with state_lock:
-        status = state["status"]
+        current_status = state["status"]
     
-    response = StatusPollResponse(status=status)
-    print(f"Status: {status}")
+    # Initialize response with current status
+    response = StatusPollResponse(status=current_status)
     
     # Try to read progress from rag_progress.json
     try:
@@ -203,11 +220,26 @@ async def status_poll() -> StatusPollResponse:
         if os.path.exists(progress_path):
             with open(progress_path, 'r') as f:
                 progress_data = json.load(f)
+                
+                # Update status based on progress data if available
+                progress_status = progress_data.get('status')
+                if progress_status == 'in_progress':
+                    # If we're in progress, use the step from progress data as the status
+                    step = progress_data.get('step')
+                    if step and step != current_status and step in StatusPollResponse.__annotations__['status'].__args__:
+                        with state_lock:
+                            state["status"] = step
+                        response.status = step
+                
+                # Update progress information
                 response.step = progress_data.get('step')
                 response.current = progress_data.get('current', 0)
                 response.total = progress_data.get('total', 1)
                 response.progress = progress_data.get('percentage', 0)
                 response.message = f"{response.step}: {response.progress}%"
+                
+    except json.JSONDecodeError as e:
+        logging.error(f"Error decoding progress file: {e}")
     except Exception as e:
         logging.error(f"Error reading progress file: {e}")
     

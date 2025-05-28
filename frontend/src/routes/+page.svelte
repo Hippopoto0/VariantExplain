@@ -5,6 +5,15 @@
   import type { AnalysisResponse, FileUploadResponse, HealthResponse, StatusPollResponse } from "../clients/clients";
 	import { setProgressState, progressState } from "$lib/states/progressState.svelte";
 	import { fade } from "svelte/transition";
+  // Track completed steps using Svelte 5 runes
+  let completedSteps = $state(new Set());
+  
+  // Track progress state changes
+  $effect(() => {
+    if (progressState.status && progressState.status !== 'idle' && !completedSteps.has(progressState.status)) {
+      completedSteps = new Set([...completedSteps, progressState.status]);
+    }
+  });
 
   onMount(async () => {
     const res = await fetch("http://localhost:8000/health");
@@ -124,28 +133,67 @@
             <h2 transition:fade class="text-[#0c1c17] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Processing Steps</h2>
           {/if}
 
-          {#if progressState.status == "vep_annotation"}
-          <div class="flex flex-col gap-3 p-4">
-            <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Generating VEP</p></div>
-            <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage}%`}></div></div>
+          {#if completedSteps.has('vep_annotation') || progressState.status === 'vep_annotation'}
+          <div class="flex flex-col gap-3 p-4" in:fade>
+            <div class="flex gap-6 justify-between">
+              <p class="text-[#0c1c17] text-base font-medium leading-normal">
+                {progressState.status === 'vep_annotation' ? 'Generating VEP...' : 'Generated VEP'}
+              </p>
+              {#if progressState.status !== 'vep_annotation'}
+                <span class="text-green-600">✓</span>
+              {/if}
+            </div>
+            {#if progressState.status === 'vep_annotation'}
+              <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage}%`}></div></div>
+            {/if}
           </div>
           {/if}
-          {#if progressState.status == "find_damaging_variants"}
-          <div class="flex flex-col gap-3 p-4">
-            <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Finding Damaging Variants</p></div>
-            <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage}%`}></div></div>
+          
+          {#if completedSteps.has('find_damaging_variants') || progressState.status === 'find_damaging_variants'}
+          <div class="flex flex-col gap-3 p-4" in:fade>
+            <div class="flex gap-6 justify-between">
+              <p class="text-[#0c1c17] text-base font-medium leading-normal">
+                {progressState.status === 'find_damaging_variants' ? 'Finding Damaging Variants...' : 'Found Damaging Variants'}
+              </p>
+              {#if progressState.status !== 'find_damaging_variants' && completedSteps.has('find_damaging_variants')}
+                <span class="text-green-600">✓</span>
+              {/if}
+            </div>
+            {#if progressState.status === 'find_damaging_variants'}
+              <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage}%`}></div></div>
+            {/if}
           </div>
           {/if}
-          {#if progressState.status == "fetch_gwas_associations"}
-          <div class="flex flex-col gap-3 p-4">
-            <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Finding Associated Studies</p></div>
-            <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863]" style="width: 60%;"></div></div>
+          
+          {#if completedSteps.has('fetch_gwas_associations') || progressState.status === 'fetch_gwas_associations'}
+          <div class="flex flex-col gap-3 p-4" in:fade>
+            <div class="flex gap-6 justify-between">
+              <p class="text-[#0c1c17] text-base font-medium leading-normal">
+                {progressState.status === 'fetch_gwas_associations' ? 'Finding GWAS Associations...' : 'Found GWAS Associations'}
+              </p>
+              {#if progressState.status !== 'fetch_gwas_associations' && completedSteps.has('fetch_gwas_associations')}
+                <span class="text-green-600">✓</span>
+              {/if}
+            </div>
+            {#if progressState.status === 'fetch_gwas_associations'}
+              <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage || 60}%`}></div></div>
+            {/if}
           </div>
           {/if}
-          {#if progressState.status == "fetch_pubmed_abstracts"}
-          <div class="flex flex-col gap-3 p-4">
-            <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Summarizing Results</p></div>
-            <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863]" style="width: 80%;"></div></div>
+          
+          {#if completedSteps.has('fetch_pubmed_abstracts') || progressState.status === 'fetch_pubmed_abstracts'}
+          <div class="flex flex-col gap-3 p-4" in:fade>
+            <div class="flex gap-6 justify-between">
+              <p class="text-[#0c1c17] text-base font-medium leading-normal">
+                {progressState.status === 'fetch_pubmed_abstracts' ? 'Finding Related Studies...' : 'Found Related Studies'}
+              </p>
+              {#if progressState.status !== 'fetch_pubmed_abstracts' && completedSteps.has('fetch_pubmed_abstracts')}
+                <span class="text-green-600">✓</span>
+              {/if}
+            </div>
+            {#if progressState.status === 'fetch_pubmed_abstracts'}
+              <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage || 80}%`}></div></div>
+            {/if}
           </div>
           {/if}
 
