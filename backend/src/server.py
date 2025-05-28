@@ -196,7 +196,7 @@ class StatusPollResponse(BaseModel):
         # "fetching_trait_info", 
         # "finding_associated_studies", 
         # "summarising_results",
-        # "completed",
+        "completed",
         "error"
     ]
     progress: Optional[float] = 0

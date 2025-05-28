@@ -230,9 +230,23 @@ class RAG:
                 executor.submit(self._fetch_abstract_from_pubmed_id, pmid): pmid
                 for pmid in unique_pmids_list
             }
+            
+            # Initialize thread-safe counter for completed fetches
+            from threading import Lock
+            completed_count = 0
+            counter_lock = Lock()
+            total_pmids = len(unique_pmids_list)
 
-            for future in tqdm(as_completed(future_to_pmid), total=len(unique_pmids_list), desc="Fetching PubMed abstracts"):
+            def update_progress():
+                nonlocal completed_count
+                with counter_lock:
+                    completed_count += 1
+                    progress = int((completed_count / total_pmids) * 100)
+                    self._update_progress("fetch_pubmed_abstracts", progress, 100, "in_progress")
+
+            for future in tqdm(as_completed(future_to_pmid), total=total_pmids, desc="Fetching PubMed abstracts"):
                 pmid = future_to_pmid[future]
+                update_progress()
                 try:
                     abstract = future.result()
                     self.processed_pmids.add(pmid) # Mark as processed (even if abstract is None)

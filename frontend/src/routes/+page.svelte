@@ -176,7 +176,7 @@
               {/if}
             </div>
             {#if progressState.status === 'fetch_gwas_associations'}
-              <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage || 60}%`}></div></div>
+              <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage || 0}%`}></div></div>
             {/if}
           </div>
           {/if}
@@ -192,7 +192,7 @@
               {/if}
             </div>
             {#if progressState.status === 'fetch_pubmed_abstracts'}
-              <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage || 80}%`}></div></div>
+              <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage || 0}%`}></div></div>
             {/if}
           </div>
           {/if}
