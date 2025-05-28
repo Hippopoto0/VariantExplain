@@ -36,6 +36,7 @@ app = FastAPI(
 )
 
 trait_results: List[TraitSummary] = []
+trait_results_lock = threading.Lock()
 
 # Define a custom filter class
 class OpenAPIFilter(logging.Filter):
@@ -148,7 +149,9 @@ def run_analysis_thread(filename):
         
         # Process VEP data - this will update the progress file
         results = rag.process_vep_data(parser.annotation)
-        trait_results = results
+        with trait_results_lock:
+            trait_results.clear()
+            trait_results.extend(results)
         print("results", results)
         # Check if processing completed successfully
         progress = get_progress()
@@ -248,7 +251,8 @@ class ResultsResponse(BaseModel):
 
 @app.get("/results")
 async def results() -> ResultsResponse:
-    return ResultsResponse(results=trait_results)
+    with trait_results_lock:
+        return ResultsResponse(results=trait_results)
 
 
 class HealthResponse(BaseModel):
