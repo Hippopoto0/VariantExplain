@@ -2,11 +2,12 @@
     import VCFFileUpload from "$lib/components/VCFFileUpload.svelte";
 	import { fileState } from "$lib/states/fileState.svelte";
 	import { onMount } from "svelte";
-  import type { AnalysisResponse, FileUploadResponse, HealthResponse, StatusPollResponse } from "../clients/clients";
+  import type { AnalysisResponse, FileUploadResponse, HealthResponse, StatusPollResponse, TraitSummary } from "../clients/clients";
 	import { setProgressState, progressState } from "$lib/states/progressState.svelte";
 	import { fade } from "svelte/transition";
   // Track completed steps using Svelte 5 runes
   let completedSteps = $state(new Set());
+  let results = $state<TraitSummary[]>([{'trait_title': 'Early-onset schizophrenia', 'increase_decrease': 34.6, 'details': "Early-onset schizophrenia (EOS) is a rare form of schizophrenia that begins before the age of 18. This association study found that the 'A' allele of the rs1801133 variant is associated with an increased risk of EOS in Han Chinese populations. The study involved a two-stage genome-wide association study (GWAS) with over 2,159 EOS cases and 6,561 controls. The identified risk loci may provide potential targets for therapeutics and diagnostics.", 'good_or_bad': 'bad', 'image_url': 'https://tse4.mm.bing.net/th/id/OIP.6-VgYes6T0EYLl9UaW4dUAHaHa?w=159&h=180&c=7&r=0&o=5&pid=1.7'}]);
   
   // Track progress state changes
   $effect(() => {
@@ -46,6 +47,7 @@
     const res = await fetch("http://localhost:8000/results");
     const resJSON = await res.json();
     console.log("Results:", resJSON);
+    results = resJSON;
   }
 
   const handleAnalyseVariants = async () => {
@@ -223,6 +225,19 @@
             {/if}
           </div>
           {/if}
+
+          {#each results as result}
+            <div class="flex flex-col gap-3 p-4 w-full" in:fade>
+              <span class="flex flex-row items-center">
+                <h1 class="font-bold text-2xl">{result.trait_title}</h1>
+                <h2 class={`font-bold ml-4 ${result.good_or_bad === 'good' ? 'text-green-600' : 'text-red-600'}`}>{result.good_or_bad === 'good' ? result.increase_decrease : "-" + result.increase_decrease}%</h2>
+              </span>
+              <div class="w-full flex flex-row gap-4">
+                <img src={result.image_url} alt="" class="w-36 aspect-square rounded-xl">
+                <p>{result.details}</p>
+              </div>
+            </div>
+          {/each}
 
           <div class={`absolute w-full min-h-[30rem] flex flex-col items-center justify-center text-center 
           
