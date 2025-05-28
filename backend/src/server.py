@@ -4,7 +4,7 @@ import logging
 from fastapi import FastAPI, WebSocket, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.websockets import WebSocketDisconnect
-from typing import Dict, Any, Literal, Optional
+from typing import Dict, Any, Literal, Optional, List
 from pydantic import BaseModel
 from pathlib import Path
 import threading
@@ -14,6 +14,7 @@ from fastapi import FastAPI, WebSocket, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 import os
 from pathlib import Path
+from models import TraitSummary
 
 import threading
 
@@ -33,6 +34,8 @@ app = FastAPI(
     description="API for VariantExplain application",
     version="0.1.0"
 )
+
+trait_results: List[TraitSummary] = []
 
 # Define a custom filter class
 class OpenAPIFilter(logging.Filter):
@@ -145,6 +148,7 @@ def run_analysis_thread(filename):
         
         # Process VEP data - this will update the progress file
         results = rag.process_vep_data(parser.annotation)
+        trait_results = results
         print("results", results)
         # Check if processing completed successfully
         progress = get_progress()
@@ -162,6 +166,8 @@ def run_analysis_thread(filename):
             state["analysis_running"] = False
             if state.get("status") != "error":
                 state["status"] = "completed"
+
+    return AnalysisResponse(message="Analysis started in different thread")
 
 @app.get("/analysis")
 async def analysis() -> AnalysisResponse:
@@ -236,6 +242,14 @@ async def status_poll() -> StatusPollResponse:
         logging.error(f"Error reading progress file: {e}")
     
     return response
+
+class ResultsResponse(BaseModel):
+    results: List[TraitSummary]
+
+@app.get("/results")
+async def results() -> ResultsResponse:
+    return ResultsResponse(results=trait_results)
+
 
 class HealthResponse(BaseModel):
     status: str

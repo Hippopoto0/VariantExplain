@@ -31,6 +31,10 @@ export interface HealthResponse {
   status: string;
 }
 
+export interface ResultsResponse {
+  results: TraitSummary[];
+}
+
 export type StatusPollResponseStatus = typeof StatusPollResponseStatus[keyof typeof StatusPollResponseStatus];
 
 
@@ -64,6 +68,25 @@ export interface StatusPollResponse {
   current?: StatusPollResponseCurrent;
   total?: StatusPollResponseTotal;
   message?: StatusPollResponseMessage;
+}
+
+export type TraitSummaryGoodOrBad = typeof TraitSummaryGoodOrBad[keyof typeof TraitSummaryGoodOrBad];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TraitSummaryGoodOrBad = {
+  good: 'good',
+  bad: 'bad',
+} as const;
+
+export type TraitSummaryImageUrl = string | null;
+
+export interface TraitSummary {
+  trait_title: string;
+  increase_decrease: number;
+  details: string;
+  good_or_bad: TraitSummaryGoodOrBad;
+  image_url?: TraitSummaryImageUrl;
 }
 
 export type ValidationErrorLocItem = string | number;
@@ -126,6 +149,17 @@ export const statusPollStatusPollGet = <TData = AxiosResponse<StatusPollResponse
   }
 
 /**
+ * @summary Results
+ */
+export const resultsResultsGet = <TData = AxiosResponse<ResultsResponse>>(
+     options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.get(
+      `http://localhost:8000/results`,options
+    );
+  }
+
+/**
  * Health check endpoint for monitoring.
  * @summary Health Check
  */
@@ -141,4 +175,5 @@ export type RootGetResult = AxiosResponse<RootGet200>
 export type UploadFileUploadFilePostResult = AxiosResponse<FileUploadResponse>
 export type AnalysisAnalysisGetResult = AxiosResponse<AnalysisResponse>
 export type StatusPollStatusPollGetResult = AxiosResponse<StatusPollResponse>
+export type ResultsResultsGetResult = AxiosResponse<ResultsResponse>
 export type HealthCheckHealthGetResult = AxiosResponse<HealthResponse>

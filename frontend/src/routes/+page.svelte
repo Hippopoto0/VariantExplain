@@ -30,11 +30,22 @@
       const resJSON: StatusPollResponse = await res.json();
       console.log("Status:", resJSON.status);
       setProgressState(resJSON.status, resJSON.progress ?? 0);
+
+      if (resJSON.status === "completed") {
+        stopPolling();
+        getResults();
+      }
     }, 200);
   }
 
   const stopPolling = () => {
     clearInterval(intervalId);
+  }
+
+  const getResults = async () => {
+    const res = await fetch("http://localhost:8000/results");
+    const resJSON = await res.json();
+    console.log("Results:", resJSON);
   }
 
   const handleAnalyseVariants = async () => {

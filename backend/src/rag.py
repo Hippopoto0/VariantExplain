@@ -9,6 +9,7 @@ import time
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import random # For random jitter in sleep
+from models import parse_trait_summary
 
 # --- Configuration ---
 NCBI_EMAIL = "kbkyeofzdwcccsjzzy@nespj.com"  # Replace with your real email for NCBI API
@@ -357,11 +358,15 @@ class RAG:
         try:
             trait_summaries = agent.summarise_traits(results_with_abstracts)
             self._update_progress("summarise_traits", 1, 1, "completed")
+
+            trait_summaries_as_models = [parse_trait_summary(ts) for ts in trait_summaries]
         except Exception as e:
             logging.error(f"Trait summarisation failed: {e}")
             self._update_progress("summarise_traits", 0, 1, "error")
-            trait_summaries = []
-        return trait_summaries
+            trait_summaries_as_models = []
+
+        self._update_progress("completed", 1, 1, "completed")
+        return trait_summaries_as_models
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
