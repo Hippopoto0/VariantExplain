@@ -2,7 +2,7 @@
     import VCFFileUpload from "$lib/components/VCFFileUpload.svelte";
 	import { fileState } from "$lib/states/fileState.svelte";
 	import { onMount } from "svelte";
-  import type { HealthResponse } from "../clients/clients";
+  import type { AnalysisResponse, FileUploadResponse, HealthResponse } from "../clients/clients";
 
   onMount(async () => {
     const res = await fetch("http://localhost:8000/health");
@@ -10,6 +10,59 @@
     
     console.log(resJSON.status);
   });
+
+  let intervalId: NodeJS.Timeout;
+
+  const startPolling = async () => {
+    intervalId = setInterval(async () => {
+      const res = await fetch("http://localhost:8000/status_poll");
+      const resJSON = await res.json();
+      console.log("Status:", resJSON.status);
+    }, 500);
+  }
+
+  const stopPolling = () => {
+    clearInterval(intervalId);
+  }
+
+  const handleAnalyseVariants = async () => {
+    const fileToSend = fileState.file;
+    if (!fileToSend) {
+      console.error("No file selected");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", fileToSend);
+
+    try {
+      // Send file to server
+      const res = await fetch("http://localhost:8000/upload_file", {
+        method: "POST",
+        body: formData,
+        // Don't set Content-Type header, let the browser set it with the boundary
+      });
+
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(`Upload failed: ${error}`);
+      }
+
+      const resJSON = await res.json();
+      console.log("File uploaded successfully:", resJSON.filename);
+
+      // Start the analysis
+      const analysisRes = await fetch("http://localhost:8000/analysis");
+      const analysisResJSON: AnalysisResponse = await analysisRes.json();
+      console.log("Analysis started:", analysisResJSON.message);
+      if (analysisRes.ok) {
+        startPolling();
+      }
+
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
+  };
 </script>
 
 <main class="relative flex size-full min-h-screen flex-col bg-[#f8fcfa] group/design-root overflow-x-hidden" style='font-family: Manrope, "Noto Sans", sans-serif;'>
@@ -58,14 +111,13 @@
           class={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-emerald-600 text-white text-sm font-bold leading-normal tracking-[0.015em] 
           transition-all duration-300 ease-in-out
           ${fileState.file ? 'visible opacity-100 translate-y-0 delay-150' : 'invisible opacity-0 -translate-y-4 duration-75 delay-0'}`}
-          onclick={() => {
-              
-          }}
+          onclick={handleAnalyseVariants}
           >
           <span class="truncate">Analyse Variants</span>
          </button>
         </div>
         <div class="layout-content-container flex flex-col max-w-[960px] flex-1 ml-6">
+          
           <h2 class="text-[#0c1c17] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Processing Steps</h2>
           <div class="flex flex-col gap-3 p-4">
             <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Generating VEP</p></div>

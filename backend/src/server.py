@@ -1,8 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, Any
+from fastapi.websockets import WebSocketDisconnect
+from typing import Dict, Any, Literal
 from pydantic import BaseModel
 import logging
+from fastapi import FastAPI, WebSocket, File, UploadFile, HTTPException
+from fastapi.responses import JSONResponse
+import os
+from pathlib import Path
+
+state = {
+    "filename": None,
+    "status": "idle",
+}
 
 app = FastAPI(
     title="VariantExplain API",
@@ -44,13 +54,54 @@ async def root() -> Dict[str, str]:
     """Root endpoint that returns a welcome message."""
     return {"message": "Welcome to VariantExplain API"}
 
+class FileUploadRequest(BaseModel):
+    file: UploadFile
+
+class FileUploadResponse(BaseModel):
+    filename: str
+
+# Create uploads directory if it doesn't exist
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(exist_ok=True, parents=True)
+
+@app.post("/upload_file")
+async def upload_file(file: UploadFile = File(...)) -> FileUploadResponse:
+    try:
+        # Save the uploaded file
+        file_path = UPLOAD_DIR / file.filename
+        state["filename"] = file.filename
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+            
+        return FileUploadResponse(filename=file.filename)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
+
+
+class AnalysisResponse(BaseModel):
+    message: str
+
+@app.get("/analysis")
+async def analysis() -> AnalysisResponse:
+    state["status"] = "generating_vep"
+    return AnalysisResponse(message="Analysis started")
+
+class StatusPollResponse(BaseModel):
+    status: Literal["generating_vep", "fetching_risky_genes", "fetching_trait_info", "finding_associated_studies", "summarising_results"]
+
+@app.get("/status_poll")
+async def status_poll() -> StatusPollResponse:
+    """Polling endpoint for status updates."""
+    return StatusPollResponse(status=state["status"])
+
 class HealthResponse(BaseModel):
     status: str
 
 @app.get("/health")
 async def health_check() -> HealthResponse:
     """Health check endpoint for monitoring."""
-    return HealthResponse(status="healthy")
+    return HealthResponse(status="healthy")  
 
 # if __name__ == "__main__":
 #     import uvicorn

@@ -11,8 +11,48 @@ import type {
   AxiosResponse
 } from 'axios';
 
+export interface AnalysisResponse {
+  message: string;
+}
+
+export interface BodyUploadFileUploadFilePost {
+  file: Blob;
+}
+
+export interface FileUploadResponse {
+  filename: string;
+}
+
+export interface HTTPValidationError {
+  detail?: ValidationError[];
+}
+
 export interface HealthResponse {
   status: string;
+}
+
+export type StatusPollResponseStatus = typeof StatusPollResponseStatus[keyof typeof StatusPollResponseStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const StatusPollResponseStatus = {
+  generating_vep: 'generating_vep',
+  fetching_risky_genes: 'fetching_risky_genes',
+  fetching_trait_info: 'fetching_trait_info',
+  finding_associated_studies: 'finding_associated_studies',
+  summarising_results: 'summarising_results',
+} as const;
+
+export interface StatusPollResponse {
+  status: StatusPollResponseStatus;
+}
+
+export type ValidationErrorLocItem = string | number;
+
+export interface ValidationError {
+  loc: ValidationErrorLocItem[];
+  msg: string;
+  type: string;
 }
 
 export type RootGet200 = {[key: string]: string};
@@ -30,6 +70,43 @@ export const rootGet = <TData = AxiosResponse<RootGet200>>(
   }
 
 /**
+ * @summary Upload File
+ */
+export const uploadFileUploadFilePost = <TData = AxiosResponse<FileUploadResponse>>(
+    bodyUploadFileUploadFilePost: BodyUploadFileUploadFilePost, options?: AxiosRequestConfig
+ ): Promise<TData> => {const formData = new FormData();
+formData.append(`file`, bodyUploadFileUploadFilePost.file)
+
+    return axios.post(
+      `http://localhost:8000/upload_file`,
+      formData,options
+    );
+  }
+
+/**
+ * @summary Analysis
+ */
+export const analysisAnalysisGet = <TData = AxiosResponse<AnalysisResponse>>(
+     options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.get(
+      `http://localhost:8000/analysis`,options
+    );
+  }
+
+/**
+ * Polling endpoint for status updates.
+ * @summary Status Poll
+ */
+export const statusPollStatusPollGet = <TData = AxiosResponse<StatusPollResponse>>(
+     options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.get(
+      `http://localhost:8000/status_poll`,options
+    );
+  }
+
+/**
  * Health check endpoint for monitoring.
  * @summary Health Check
  */
@@ -42,4 +119,7 @@ export const healthCheckHealthGet = <TData = AxiosResponse<HealthResponse>>(
   }
 
 export type RootGetResult = AxiosResponse<RootGet200>
+export type UploadFileUploadFilePostResult = AxiosResponse<FileUploadResponse>
+export type AnalysisAnalysisGetResult = AxiosResponse<AnalysisResponse>
+export type StatusPollStatusPollGetResult = AxiosResponse<StatusPollResponse>
 export type HealthCheckHealthGetResult = AxiosResponse<HealthResponse>
