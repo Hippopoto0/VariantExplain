@@ -3,8 +3,9 @@ import json
 import gzip
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import random
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # --- Configuration ---
 SERVER = "https://rest.ensembl.org"
@@ -101,7 +102,7 @@ def send_vep_batch(variants, batch_index, attempt=1, max_attempts=5):
         return None
 
 # --- Main parallel processing logic ---
-def process_vcf_file_parallel(input_vcf_path, output_json_path, max_workers=10):
+def process_vcf_file_parallel(input_vcf_path, output_json_path, max_workers=30):
     """
     Reads a VCF file, batches variants, and sends them to the VEP REST API in parallel.
     Writes the annotated results to a JSON file.
@@ -133,6 +134,8 @@ def process_vcf_file_parallel(input_vcf_path, output_json_path, max_workers=10):
 
         all_annotations = []
         start_time = time.time()
+        completed_batches = 0
+        completed_batches_lock = threading.Lock()
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {
@@ -140,7 +143,6 @@ def process_vcf_file_parallel(input_vcf_path, output_json_path, max_workers=10):
                 for i, batch in enumerate(batches)
             }
 
-            completed_batches = 0
             for future in as_completed(futures):
                 batch_idx = futures[future]
                 try:
@@ -153,8 +155,10 @@ def process_vcf_file_parallel(input_vcf_path, output_json_path, max_workers=10):
                 except Exception as e:
                     print(f"Batch {batch_idx} generated an exception: {e}")
                     continue
-                # Write progress after each batch
-                completed_batches += 1
+                # Atomically increment completed_batches
+                with completed_batches_lock:
+                    completed_batches += 1
+                    current_completed = completed_batches
                 try:
                     progress = {
                         "current": completed_batches,
