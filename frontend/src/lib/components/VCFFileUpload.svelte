@@ -1,6 +1,8 @@
 <script lang="ts">
     import { fileState, setFile } from "$lib/states/fileState.svelte";
 
+    let { disabled }: {disabled?: boolean} = $props()
+
     function handleFileChange(event: Event) {
         const target = event.target as HTMLInputElement;
         const files = target.files;
@@ -12,7 +14,7 @@
     }
 </script>
 
-<div class="relative">
+<div class={`relative ${disabled ? 'opacity-50 cursor-not-allowed grayscale' : ''}`} >
     <div class="relative w-full">
         <div class="h-24 max-w-[480px] sm:h-auto sm:py-14 mx-auto"
              style="height: ${fileState.file ? '224px' : '96px'};">
@@ -44,6 +46,7 @@
                 onclick={(e) => {e.stopPropagation(); setFile(null)}}
                 class="text-gray-500 hover:text-red-500 transition-colors"
                 aria-label="Remove file"
+                disabled={disabled}
             >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -53,7 +56,9 @@
         </span>
         <div class="mt-2"></div>
         <div class="relative">
-            <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#e6f4ef] text-[#0c1c17] text-sm font-bold leading-normal tracking-[0.015em]">Click here to change</button>
+            <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#e6f4ef] text-[#0c1c17] text-sm font-bold leading-normal tracking-[0.015em]"
+            disabled={disabled}
+            >Click here to change</button>
             <input type="file" accept=".vcf" oninput={handleFileChange} class="absolute inset-0 opacity-0 size-full" />
         </div>
     </div>

@@ -47,7 +47,7 @@ class Agent:
             Trait title:
             Increase/decrease of chance as percentage
             Details of the GWAS trait
-            Whether having the trait is a good or bad thing
+            Whether having this gene is a good or bad thing
 
             Data should be given as JSON:
             [

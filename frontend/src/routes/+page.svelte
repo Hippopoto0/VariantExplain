@@ -132,12 +132,15 @@
               <p class="text-[#46a080] text-sm font-normal leading-normal">Upload your VCF file to analyze potential health conditions.</p>
             </div>
           </div>
-         <VCFFileUpload />
+         <VCFFileUpload disabled={progressState.status !== 'idle'} />
          <div class="mt-4"></div>
          <button
           class={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-emerald-600 text-white text-sm font-bold leading-normal tracking-[0.015em] 
           transition-all duration-300 ease-in-out
-          ${fileState.file ? 'visible opacity-100 translate-y-0 delay-150' : 'invisible opacity-0 -translate-y-4 duration-75 delay-0'}`}
+          ${fileState.file ? 'visible opacity-100 translate-y-0 delay-150' : 'invisible opacity-0 -translate-y-4 duration-75 delay-0'}
+          ${progressState.status !== 'idle' ? 'bg-gray-300 cursor-not-allowed' : ''}
+          `}
+          disabled={progressState.status !== 'idle'}
           onclick={handleAnalyseVariants}
           >
           <span class="truncate">Analyse Variants</span>
@@ -232,7 +235,7 @@
             <div class="flex flex-col gap-3 p-4 w-full" in:fade>
               <span class="flex flex-row items-center">
                 <h1 class="font-bold text-2xl">{result.trait_title}</h1>
-                <h2 class={`font-bold ml-4 ${result.good_or_bad === 'good' ? 'text-green-600' : 'text-red-600'}`}>{result.good_or_bad === 'good' ? result.increase_decrease : "-" + result.increase_decrease}%</h2>
+                <h2 class={`font-bold ml-4 ${result.good_or_bad === 'good' ? 'text-green-600' : 'text-red-600'}`}>{result.increase_decrease > 0 ? '+' : ''}{result.increase_decrease}%</h2>
               </span>
               <div class="w-full flex flex-row gap-4">
                 <img src={result.image_url} alt="" class="w-36 aspect-square rounded-xl">
