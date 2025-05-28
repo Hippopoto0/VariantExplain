@@ -2,13 +2,14 @@
     import VCFFileUpload from "$lib/components/VCFFileUpload.svelte";
 	import { fileState } from "$lib/states/fileState.svelte";
 	import { onMount } from "svelte";
-  import type { AnalysisResponse, FileUploadResponse, HealthResponse, StatusPollResponse, TraitSummary } from "../clients/clients";
+  import type { AnalysisResponse, FileUploadResponse, HealthResponse, ResultsResponse, StatusPollResponse, TraitSummary } from "../clients/clients";
 	import { setProgressState, progressState } from "$lib/states/progressState.svelte";
 	import { fade } from "svelte/transition";
   // Track completed steps using Svelte 5 runes
   let completedSteps = $state(new Set());
-  let results = $state<TraitSummary[]>([{'trait_title': 'Early-onset schizophrenia', 'increase_decrease': 34.6, 'details': "Early-onset schizophrenia (EOS) is a rare form of schizophrenia that begins before the age of 18. This association study found that the 'A' allele of the rs1801133 variant is associated with an increased risk of EOS in Han Chinese populations. The study involved a two-stage genome-wide association study (GWAS) with over 2,159 EOS cases and 6,561 controls. The identified risk loci may provide potential targets for therapeutics and diagnostics.", 'good_or_bad': 'bad', 'image_url': 'https://tse4.mm.bing.net/th/id/OIP.6-VgYes6T0EYLl9UaW4dUAHaHa?w=159&h=180&c=7&r=0&o=5&pid=1.7'}]);
-  
+  // let results = $state<TraitSummary[]>([{'trait_title': 'Early-onset schizophrenia', 'increase_decrease': 34.6, 'details': "Early-onset schizophrenia (EOS) is a rare form of schizophrenia that begins before the age of 18. This association study found that the 'A' allele of the rs1801133 variant is associated with an increased risk of EOS in Han Chinese populations. The study involved a two-stage genome-wide association study (GWAS) with over 2,159 EOS cases and 6,561 controls. The identified risk loci may provide potential targets for therapeutics and diagnostics.", 'good_or_bad': 'bad', 'image_url': 'https://tse4.mm.bing.net/th/id/OIP.6-VgYes6T0EYLl9UaW4dUAHaHa?w=159&h=180&c=7&r=0&o=5&pid=1.7'}]);
+  let results = $state<TraitSummary[]>([]);
+
   // Track progress state changes
   $effect(() => {
     if (progressState.status && progressState.status !== 'idle' && !completedSteps.has(progressState.status)) {
@@ -45,9 +46,10 @@
 
   const getResults = async () => {
     const res = await fetch("http://localhost:8000/results");
-    const resJSON = await res.json();
-    console.log("Results:", resJSON);
-    results = resJSON;
+    const resJSON: ResultsResponse = await res.json();
+    console.log("Results:", resJSON.results);
+
+    results = [...resJSON.results];
   }
 
   const handleAnalyseVariants = async () => {
@@ -141,7 +143,7 @@
           <span class="truncate">Analyse Variants</span>
          </button>
         </div>
-        <div class="relative layout-content-container bg-gray-100 rounded-2xl flex flex-col max-w-[960px] flex-1 ml-6">
+        <div class="relative layout-content-container bg-gray-100 rounded-2xl flex flex-col max-w-[960px] max-h-[calc(100vh-120px)] flex-1 ml-6 overflow-auto">
           {#if progressState.status != "idle"}
             <h2 transition:fade class="text-[#0c1c17] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Processing Steps</h2>
           {/if}
