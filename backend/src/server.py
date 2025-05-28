@@ -1,8 +1,14 @@
-from fastapi import FastAPI, WebSocket
+import json
+import os
+import logging
+from fastapi import FastAPI, WebSocket, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.websockets import WebSocketDisconnect
-from typing import Dict, Any, Literal
+from typing import Dict, Any, Literal, Optional
 from pydantic import BaseModel
+from pathlib import Path
+import threading
+import traceback
 import logging
 from fastapi import FastAPI, WebSocket, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
@@ -94,30 +100,51 @@ def run_analysis_thread(filename):
     from parse import VCFParser
     from rag import RAG
     import traceback
-    try:
+    import time
+    
+    def update_state(status, result=None, error=None):
         with state_lock:
-            state["status"] = "generating_vep"
-            state["result"] = None
-            state["error"] = None
-            state["analysis_running"] = True
-        # Assume uploads dir
+            state["status"] = status
+            if result is not None:
+                state["result"] = result
+            if error is not None:
+                state["error"] = error
+    
+    try:
+        # Initialize state
+        with state_lock:
+            state.update({
+                "status": "starting",
+                "result": None,
+                "error": None,
+                "analysis_running": True,
+                "start_time": time.time()
+            })
+        
+        # Parse VCF file
         file_path = UPLOAD_DIR / filename
         parser = VCFParser(str(file_path))
-        with state_lock:
-            state["status"] = "fetching_trait_info"
+        
+        # Initialize RAG and process VEP data
+        update_state("find_damaging_variants")
         rag = RAG()
+        
+        # Process VEP data - this will update the progress file
+        update_state("fetch_gwas_associations")
         results = rag.process_vep_data(parser.annotation)
-        with state_lock:
-            state["status"] = "summarising_results"
-            state["result"] = results
+        
+        # Update state with final results
+        update_state("completed", result=results)
+        
     except Exception as e:
-        with state_lock:
-            state["error"] = f"Error: {e}\n{traceback.format_exc()}"
-            state["status"] = "idle"
+        error_msg = f"Error: {e}\n{traceback.format_exc()}"
+        logging.error(error_msg)
+        update_state("error", error=error_msg)
     finally:
         with state_lock:
-            state["status"] = "idle"
             state["analysis_running"] = False
+            if state.get("status") != "error":
+                state["status"] = "completed"
 
 @app.get("/analysis")
 async def analysis() -> AnalysisResponse:
@@ -130,32 +157,61 @@ async def analysis() -> AnalysisResponse:
         # Start thread
         thread = threading.Thread(target=run_analysis_thread, args=(filename,), daemon=True)
         thread.start()
-        state["status"] = "generating_vep"
+        state["status"] = "vep_annotation"
         state["analysis_running"] = True
     return AnalysisResponse(message="Analysis started")
 
 from typing import Optional
 class StatusPollResponse(BaseModel):
-    status: Literal["idle", "generating_vep", "fetching_risky_genes", "fetching_trait_info", "finding_associated_studies", "summarising_results"]
+    status: Literal[
+        "idle", 
+        "starting",
+        "vep_annotation",
+        "find_damaging_variants",
+        "fetch_gwas_associations",
+        "fetch_pubmed_abstracts",
+        # "starting",
+        # "generating_vep", 
+        # "find_damaging_variants",
+        # "fetch_gwas_associations",
+        # "fetch_pubmed_abstracts",
+        # "fetching_risky_genes", 
+        # "fetching_trait_info", 
+        # "finding_associated_studies", 
+        # "summarising_results",
+        # "completed",
+        "error"
+    ]
     progress: Optional[float] = 0
+    step: Optional[str] = None
+    current: Optional[int] = 0
+    total: Optional[int] = 0
+    message: Optional[str] = None
 
 @app.get("/status_poll")
 async def status_poll() -> StatusPollResponse:
     """Polling endpoint for status updates."""
     with state_lock:
         status = state["status"]
-    progress = None
-    if status == "generating_vep":
-        try:
-            import json
-            progress_path = "generated_annotation/vep_progress.json"
-            if os.path.exists(progress_path):
-                with open(progress_path, "r") as pf:
-                    progress_data = json.load(pf)
-                    progress = progress_data.get("percentage")
-        except Exception as e:
-            progress = None
-    return StatusPollResponse(status=status, progress=progress)
+    
+    response = StatusPollResponse(status=status)
+    print(f"Status: {status}")
+    
+    # Try to read progress from rag_progress.json
+    try:
+        progress_path = "generated_annotation/rag_progress.json"
+        if os.path.exists(progress_path):
+            with open(progress_path, 'r') as f:
+                progress_data = json.load(f)
+                response.step = progress_data.get('step')
+                response.current = progress_data.get('current', 0)
+                response.total = progress_data.get('total', 1)
+                response.progress = progress_data.get('percentage', 0)
+                response.message = f"{response.step}: {response.progress}%"
+    except Exception as e:
+        logging.error(f"Error reading progress file: {e}")
+    
+    return response
 
 class HealthResponse(BaseModel):
     status: str

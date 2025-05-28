@@ -37,18 +37,31 @@ export type StatusPollResponseStatus = typeof StatusPollResponseStatus[keyof typ
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const StatusPollResponseStatus = {
   idle: 'idle',
-  generating_vep: 'generating_vep',
-  fetching_risky_genes: 'fetching_risky_genes',
-  fetching_trait_info: 'fetching_trait_info',
-  finding_associated_studies: 'finding_associated_studies',
-  summarising_results: 'summarising_results',
+  starting: 'starting',
+  vep_annotation: 'vep_annotation',
+  find_damaging_variants: 'find_damaging_variants',
+  fetch_gwas_associations: 'fetch_gwas_associations',
+  fetch_pubmed_abstracts: 'fetch_pubmed_abstracts',
+  error: 'error',
 } as const;
 
 export type StatusPollResponseProgress = number | null;
 
+export type StatusPollResponseStep = string | null;
+
+export type StatusPollResponseCurrent = number | null;
+
+export type StatusPollResponseTotal = number | null;
+
+export type StatusPollResponseMessage = string | null;
+
 export interface StatusPollResponse {
   status: StatusPollResponseStatus;
   progress?: StatusPollResponseProgress;
+  step?: StatusPollResponseStep;
+  current?: StatusPollResponseCurrent;
+  total?: StatusPollResponseTotal;
+  message?: StatusPollResponseMessage;
 }
 
 export type ValidationErrorLocItem = string | number;

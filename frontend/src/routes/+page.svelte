@@ -124,25 +124,25 @@
             <h2 transition:fade class="text-[#0c1c17] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Processing Steps</h2>
           {/if}
 
-          {#if progressState.status == "generating_vep"}
+          {#if progressState.status == "vep_annotation"}
           <div class="flex flex-col gap-3 p-4">
             <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Generating VEP</p></div>
             <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage}%`}></div></div>
           </div>
           {/if}
-          {#if progressState.status == "fetching_risky_genes"}
+          {#if progressState.status == "find_damaging_variants"}
           <div class="flex flex-col gap-3 p-4">
-            <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Fetching Risky Genes</p></div>
+            <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Finding Damaging Variants</p></div>
             <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863] transition-width duration-300 ease-in-out" style={`width: ${progressState.percentage}%`}></div></div>
           </div>
           {/if}
-          {#if progressState.status == "fetching_trait_info"}
+          {#if progressState.status == "fetch_gwas_associations"}
           <div class="flex flex-col gap-3 p-4">
             <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Finding Associated Studies</p></div>
             <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863]" style="width: 60%;"></div></div>
           </div>
           {/if}
-          {#if progressState.status == "finding_associated_studies"}
+          {#if progressState.status == "fetch_pubmed_abstracts"}
           <div class="flex flex-col gap-3 p-4">
             <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Summarizing Results</p></div>
             <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863]" style="width: 80%;"></div></div>

@@ -245,20 +245,49 @@ class RAG:
         
         return gwas_associations
 
+    def _update_progress(self, step: str, current: int, total: int, status: str = "in_progress") -> None:
+        """Update the progress file with the current step's progress."""
+        progress = {
+            "step": step,
+            "current": current,
+            "total": total,
+            "percentage": round(100 * current / total, 1) if total > 0 else 0,
+            "status": status,
+            "timestamp": time.time()
+        }
+        progress_file = "generated_annotation/rag_progress.json"
+        try:
+            with open(progress_file, "w") as pf:
+                json.dump(progress, pf)
+        except Exception as e:
+            logging.error(f"Failed to write progress file: {e}")
+
     def process_vep_data(self, vep_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         logging.info("Initiating VEP data processing workflow...")
+        
+        # Initialize progress tracking
+        self._update_progress("starting", 0, 1, "starting")
 
         logging.info("Identifying potentially damaging variants...")
         damaging_variant_tuples = self.find_damaging_variants_info(vep_data)
-        logging.info(f"Found {len(damaging_variant_tuples)} potentially damaging variant tuples (gene, rsID, allele).")
+        num_variants = len(damaging_variant_tuples)
+        logging.info(f"Found {num_variants} potentially damaging variant tuples (gene, rsID, allele).")
         
         if not damaging_variant_tuples:
             logging.info("No damaging variants found. Terminating process.")
+            self._update_progress("find_damaging_variants", 0, 0, "completed")
+            self._update_progress("fetch_gwas_associations", 0, 0, "skipped")
+            self._update_progress("fetch_pubmed_abstracts", 0, 0, "skipped")
             return []
+            
+        self._update_progress("find_damaging_variants", num_variants, num_variants, "completed")
         logging.info(f"Sample damaging variants (first 3 if available): {damaging_variant_tuples[:3]}")
 
+        # Process GWAS associations
         logging.info(f"Fetching GWAS associations using up to {MAX_WORKERS_GWAS} workers...")
         all_gwas_associations = []
+        completed_variants = 0
+        
         with ThreadPoolExecutor(max_workers=MAX_WORKERS_GWAS) as executor:
             future_to_variant_tuple = {
                 executor.submit(self._fetch_gwas_associations_for_rsid, vt): vt 
@@ -266,6 +295,9 @@ class RAG:
             }
             for future in tqdm(as_completed(future_to_variant_tuple), total=len(damaging_variant_tuples), desc="Fetching GWAS associations"):
                 variant_tuple_key = future_to_variant_tuple[future]
+                completed_variants += 1
+                self._update_progress("fetch_gwas_associations", completed_variants, num_variants)
+                
                 try:
                     associations_for_variant = future.result()
                     if associations_for_variant:
@@ -274,18 +306,23 @@ class RAG:
                     logging.error(f"Error processing future for variant {variant_tuple_key} during GWAS fetch: {exc}")
         
         logging.info(f"Fetched a total of {len(all_gwas_associations)} GWAS associations.")
+        self._update_progress("fetch_gwas_associations", completed_variants, num_variants, "completed")
 
         if not all_gwas_associations:
             logging.info("No relevant GWAS associations found for the damaging variants after filtering. Terminating process.")
+            self._update_progress("fetch_pubmed_abstracts", 0, 0, "skipped")
             return []
+            
         logging.info(f"Sample GWAS associations (first 1 if available): {all_gwas_associations[:1]}")
 
+        # Process PubMed abstracts
         logging.info(f"Appending PubMed abstracts using up to {MAX_WORKERS_PUBMED} workers...")
         results_with_abstracts = self.append_pubmed_abstracts(all_gwas_associations)
         
         num_with_abstracts = sum(1 for item in results_with_abstracts if item.get('abstract'))
         logging.info(f"PubMed abstract processing complete. {num_with_abstracts} out of {len(results_with_abstracts)} associations now have abstract data (or attempted fetch).")
         
+        self._update_progress("fetch_pubmed_abstracts", len(results_with_abstracts), len(results_with_abstracts), "completed")
         return results_with_abstracts
 
 if __name__ == '__main__':

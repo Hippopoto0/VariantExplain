@@ -161,11 +161,14 @@ def process_vcf_file_parallel(input_vcf_path, output_json_path, max_workers=30):
                     current_completed = completed_batches
                 try:
                     progress = {
+                        "step": "vep_annotation",
                         "current": completed_batches,
                         "total": num_batches,
-                        "percentage": round(100 * completed_batches / num_batches, 1)
+                        "percentage": round(100 * completed_batches / num_batches, 1),
+                        "status": "in_progress",
+                        "timestamp": time.time()
                     }
-                    with open("generated_annotation/vep_progress.json", "w") as pf:
+                    with open("generated_annotation/rag_progress.json", "w") as pf:
                         json.dump(progress, pf)
                 except Exception as progress_e:
                     print(f"Failed to write progress file: {progress_e}")
