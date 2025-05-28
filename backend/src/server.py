@@ -9,10 +9,18 @@ from fastapi.responses import JSONResponse
 import os
 from pathlib import Path
 
+import threading
+
+# status one of Literal["idle", "generating_vep", "fetching_risky_genes", "fetching_trait_info", "finding_associated_studies", "summarising_results"]
+
 state = {
     "filename": None,
     "status": "idle",
+    "result": None,
+    "error": None,
+    "analysis_running": False
 }
+state_lock = threading.Lock()
 
 app = FastAPI(
     title="VariantExplain API",
@@ -82,9 +90,48 @@ async def upload_file(file: UploadFile = File(...)) -> FileUploadResponse:
 class AnalysisResponse(BaseModel):
     message: str
 
+def run_analysis_thread(filename):
+    from parse import VCFParser
+    from rag import RAG
+    import traceback
+    try:
+        with state_lock:
+            state["status"] = "generating_vep"
+            state["result"] = None
+            state["error"] = None
+            state["analysis_running"] = True
+        # Assume uploads dir
+        file_path = UPLOAD_DIR / filename
+        parser = VCFParser(str(file_path))
+        with state_lock:
+            state["status"] = "fetching_trait_info"
+        rag = RAG()
+        results = rag.process_vep_data(parser.annotation)
+        with state_lock:
+            state["status"] = "summarising_results"
+            state["result"] = results
+    except Exception as e:
+        with state_lock:
+            state["error"] = f"Error: {e}\n{traceback.format_exc()}"
+            state["status"] = "idle"
+    finally:
+        with state_lock:
+            state["status"] = "idle"
+            state["analysis_running"] = False
+
 @app.get("/analysis")
 async def analysis() -> AnalysisResponse:
-    state["status"] = "generating_vep"
+    with state_lock:
+        if state.get("analysis_running", False):
+            return AnalysisResponse(message="Analysis already running")
+        filename = state.get("filename")
+        if not filename:
+            return AnalysisResponse(message="No file uploaded")
+        # Start thread
+        thread = threading.Thread(target=run_analysis_thread, args=(filename,), daemon=True)
+        thread.start()
+        state["status"] = "generating_vep"
+        state["analysis_running"] = True
     return AnalysisResponse(message="Analysis started")
 
 class StatusPollResponse(BaseModel):
@@ -93,7 +140,8 @@ class StatusPollResponse(BaseModel):
 @app.get("/status_poll")
 async def status_poll() -> StatusPollResponse:
     """Polling endpoint for status updates."""
-    return StatusPollResponse(status=state["status"])
+    with state_lock:
+        return StatusPollResponse(status=state["status"])
 
 class HealthResponse(BaseModel):
     status: str
