@@ -3,6 +3,8 @@
 	import { fileState } from "$lib/states/fileState.svelte";
 	import { onMount } from "svelte";
   import type { AnalysisResponse, FileUploadResponse, HealthResponse } from "../clients/clients";
+	import { setProgressState, progressState } from "$lib/states/progressState.svelte";
+	import { fade } from "svelte/transition";
 
   onMount(async () => {
     const res = await fetch("http://localhost:8000/health");
@@ -18,6 +20,7 @@
       const res = await fetch("http://localhost:8000/status_poll");
       const resJSON = await res.json();
       console.log("Status:", resJSON.status);
+      setProgressState(resJSON.status);
     }, 500);
   }
 
@@ -116,25 +119,73 @@
           <span class="truncate">Analyse Variants</span>
          </button>
         </div>
-        <div class="layout-content-container flex flex-col max-w-[960px] flex-1 ml-6">
-          
-          <h2 class="text-[#0c1c17] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Processing Steps</h2>
+        <div class="relative layout-content-container bg-gray-100 rounded-2xl flex flex-col max-w-[960px] flex-1 ml-6">
+          {#if progressState.status != "idle"}
+            <h2 transition:fade class="text-[#0c1c17] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Processing Steps</h2>
+          {/if}
+
+          {#if progressState.status == "generating_vep"}
           <div class="flex flex-col gap-3 p-4">
             <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Generating VEP</p></div>
             <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863]" style="width: 20%;"></div></div>
           </div>
+          {/if}
+          {#if progressState.status == "fetching_risky_genes"}
           <div class="flex flex-col gap-3 p-4">
             <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Fetching Risky Genes</p></div>
             <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863]" style="width: 40%;"></div></div>
           </div>
+          {/if}
+          {#if progressState.status == "fetching_trait_info"}
           <div class="flex flex-col gap-3 p-4">
             <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Finding Associated Studies</p></div>
             <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863]" style="width: 60%;"></div></div>
           </div>
+          {/if}
+          {#if progressState.status == "finding_associated_studies"}
           <div class="flex flex-col gap-3 p-4">
             <div class="flex gap-6 justify-between"><p class="text-[#0c1c17] text-base font-medium leading-normal">Summarizing Results</p></div>
             <div class="rounded bg-[#cde9df]"><div class="h-2 rounded bg-[#019863]" style="width: 80%;"></div></div>
           </div>
+          {/if}
+
+          <div class={`absolute w-full min-h-[30rem] flex flex-col items-center justify-center text-center 
+          
+            ${progressState.status != "idle" ? 'invisible opacity-0 -translate-y-4 duration-75 delay-0' : 'visible opacity-100 translate-y-0 delay-150'}`}>
+            <div class="relative w-full max-w-[960px] px-8">
+              <!-- Animated arrow pointing left -->
+
+              <div class="flex flex-col items-center">
+                <h1 class="text-[#2e8f71] text-2xl font-bold leading-normal">VariantExplain</h1>
+                <div class="mt-4"></div>
+                <p class="text-gray-400 text-sm font-normal leading-normal max-w-[400px]">This is a tool that helps you understand the potential health conditions associated with your genetic variants.</p>
+                <div class="mt-4"></div>
+                <p class="text-[#2e8f71] text-sm font-bold leading-normal max-w-[400px]">Upload your VCF file to analyze potential health conditions.</p>
+                <div class="mt-8"></div>
+                {#if !fileState.file}
+                  <div class="flex items-center animate-bounce-left">
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h16"></path>
+                      <!-- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17l-5-5m0 0l5-5m-5 5h16" style="transform: translateX(-10px);"></path> -->
+                    </svg>
+                  </div>
+                  <p class="text-[#2e8f71] text-sm font-normal leading-normal max-w-[400px]">Go to the sidebar to upload your VCF file and analyse variants.</p>
+                {/if}
+              
+              </div>
+
+            </div>
+          </div>
+
+          <style>
+            @keyframes bounce-left {
+              0%, 100% { transform: translateX(0) translateY(-50%); }
+              50% { transform: translateX(-10px) translateY(-50%); }
+            }
+            .animate-bounce-left {
+              animation: bounce-left 2s infinite;
+            }
+          </style>
         </div>
       </div>
     </div>

@@ -88,7 +88,7 @@ async def analysis() -> AnalysisResponse:
     return AnalysisResponse(message="Analysis started")
 
 class StatusPollResponse(BaseModel):
-    status: Literal["generating_vep", "fetching_risky_genes", "fetching_trait_info", "finding_associated_studies", "summarising_results"]
+    status: Literal["idle", "generating_vep", "fetching_risky_genes", "fetching_trait_info", "finding_associated_studies", "summarising_results"]
 
 @app.get("/status_poll")
 async def status_poll() -> StatusPollResponse:

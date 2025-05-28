@@ -36,6 +36,7 @@ export type StatusPollResponseStatus = typeof StatusPollResponseStatus[keyof typ
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const StatusPollResponseStatus = {
+  idle: 'idle',
   generating_vep: 'generating_vep',
   fetching_risky_genes: 'fetching_risky_genes',
   fetching_trait_info: 'fetching_trait_info',
