@@ -2,9 +2,7 @@
 
 A web application that helps users understand the meaning and implications of genetic variants in their genome sequences using RAG (Retrieval-Augmented Generation) technology.
 
-![Example Output](images/example_output.png)
-
-
+![Example](images/variantexplain_example.gif)
 
 ## Features
 
@@ -21,7 +19,7 @@ A web application that helps users understand the meaning and implications of ge
 - [ ] Only suitable for small VCF files, in the future could be scaled (I don't have the funds to query all that though...)
 - [ ] Complete embeddings of abstracts. When working with larger VCF files, then generate query from variant data
 - [ ] Have cache stored file of genes that have their abstracts searched for and present in vector database, to avoid repeated queries
-- [ ] Rewrite more custom interface using React, interop using FastAPI
+- [x] Rewrite more custom interface using React, interop using FastAPI
 - [ ] Add RAG-based chat to allow further querying of GWAS traits
 
 ## Installation
